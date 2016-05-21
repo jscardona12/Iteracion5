@@ -1,0 +1,84 @@
+
+----------------------------------
+--- REQUERIMIENTOS FUNCIONALES ---
+----------------------------------
+
+RF5: REGISTRAR SALIDA BUQUE
+
+	PRECONDICION: Tiene que haber un buque en un muelle ocupado.
+				  Usuario es agente portuario.
+
+	FORMATO JSON:
+	{
+		"idBuque": 3,
+		"idMuelle": 6
+	}
+
+	@PUT
+	http://localhost:8080/VideoAndes/rest/salidas?user=2
+
+	POST: Se eliminó la entrada de Muelleocupado
+		  Se agregó una salida
+
+RF6: REGISTRAR TIPO DE CARGA BUQUE
+
+	PRE: Existe un buque y coincide el tipo de carga
+		 Usuario es operador portuario.
+
+	FORMATO JSON:
+	{
+	    "idBuque": 3,
+	    "tipoCarga": "Contenedor",
+	    "esCargaRodada": "false",
+	    "esContenedor": "true"
+	}
+
+	@PUT
+	http://localhost:8080/VideoAndes/rest/tipocarga/registrarTipoCarga?user=2
+
+	POST: Se agregó un TIPOCARGA al buque.
+
+RF8: REGISTRAR ENTREGA CARGA IMPORTADOR
+
+	PRE: Existe una carga en almacén.
+
+	FORMATO JSON:
+	{
+		"numero": 10,
+		"tipo": "Carro",
+		"volumen": 10
+	}
+
+	@PUT
+	http://localhost:8080/VideoAndes/rest/cargas/recogerCarga?user=2
+
+	POST: Se registró una descarga en MovimientoTerestre
+		  Se borró la cargaEnAlmacén correspondiente
+
+
+RF9: GENERAR FACTURA EXPORTADOR
+	
+	FORMATO JSON:
+	{
+		"idBuque": 1,
+		"fecha": "2016-03-16"
+	}
+
+	@PUT
+	http://localhost:8080/VideoAndes/rest/factura/generarFactura?user=2
+
+	POST: Se registró una factura en facturas
+
+----------------------------------
+--- REQUERIMIENTOS DE CONSULTA ---
+----------------------------------
+
+RFC1: CONSULTAR ARRIBOS Y SALIDAS BUQUES
+
+	@GET
+	http://localhost:8080/VideoAndes/rest/buque/arribos_salidas?inicio=2016-03-15
+
+	Parámetros posibles del query:
+	-
+
+RFC2: CONSULTAR UN EXPORTADOR

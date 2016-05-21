@@ -22,6 +22,7 @@ import dao.DAOTablaRegistroBuques;
 import dao.DAOTablaRegistroCargas;
 import dao.DAOTablaRegistroTerminales;
 import dao.DAOTablaUsuarios;
+import dtm.PuertoAndesQueue;
 import vos.AreaAlmacenamiento;
 import vos.Buque;
 import vos.Carga;
@@ -98,6 +99,10 @@ public class PuertoAndesMaster {
 		auxId = 5000;
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();
+		
+		PuertoAndesQueue paq = new PuertoAndesQueue();
+		paq.inicializarContexto();
+		System.out.println("Funciona");
 	}
 
 	/*
@@ -207,7 +212,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			daoFacturas.setConn(conn);
 			Factura f = daoFacturas.generarFactura(idCliente, idBuque, fecha);
@@ -249,7 +254,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			daoCargas.setConn(conn);
 			Carga cargaDB = daoCargas.buscarCargaPorId(carga.getId());
@@ -306,7 +311,7 @@ public class PuertoAndesMaster {
 
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(a.getUser_id());
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			AreaAlmacenamiento aa = daoAA.buscarAreaPorId(a.getId());
 
@@ -449,7 +454,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 			
 			daoCargas.setConn(conn);
 			return daoCargas.consultarAreas(pb);
@@ -486,7 +491,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("CLIENTE") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 			
 			daoCargas.setConn(conn);
 			if(usuario.getTipo().equals("CLIENTE"))
@@ -530,7 +535,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(b.getUser_id());
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			// SE ACTUALIZA EL ESTADO DEL BUQUE.
 			daoBuques.setConn(conn);
@@ -640,7 +645,7 @@ public class PuertoAndesMaster {
 					.buscarAreaParaCargas(rb.getTipo_carga(), capacidadNecesitada);
 
 			// Busco un area de mantenimiento que
-			// no esté reservada en la fecha que se va a descargar.
+			// no estï¿½ reservada en la fecha que se va a descargar.
 			daoRA.setConn(conn);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			String date = sdf.format(new Date());
@@ -668,7 +673,7 @@ public class PuertoAndesMaster {
 			daoBuques.setConn(conn);
 			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
 			if (!buque.getEstado().equals("ATRACADO"))
-				throw new Exception("El buque no puede ser descargado. No está en el puerto");
+				throw new Exception("El buque no puede ser descargado. No estï¿½ en el puerto");
 
 			buque.setEstado("PROCESO DE DESCARGUE");
 			daoBuques.updateBuque(buque);
@@ -731,7 +736,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(rb.getId_usuario());
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			// busco todas las cargas que van en ese buque con destino puerto
 			// andes: id_buque y id_almacenamiento es null
@@ -751,7 +756,7 @@ public class PuertoAndesMaster {
 					.buscarAreaParaCargas(rb.getTipo_carga(), capacidadNecesitada);
 
 			// Busco un area de mantenimiento que
-			// no esté reservada en la fecha que se va a descargar.
+			// no estï¿½ reservada en la fecha que se va a descargar.
 			daoRA.setConn(conn);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			String date = sdf.format(new Date());
@@ -779,7 +784,7 @@ public class PuertoAndesMaster {
 			daoBuques.setConn(conn);
 			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
 			if (!buque.getEstado().equals("ATRACADO"))
-				throw new Exception("El buque no puede ser descargado. No está en el puerto");
+				throw new Exception("El buque no puede ser descargado. No estï¿½ en el puerto");
 
 			buque.setEstado("PROCESO DE DESCARGUE");
 			daoBuques.updateBuque(buque);
@@ -850,7 +855,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(rb.getId_usuario());
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			// busca el buque que va a ser cargado, lo pone en proceso de carga
 			// si es posible.
@@ -876,7 +881,7 @@ public class PuertoAndesMaster {
 				System.out.println("entro al loop");
 				Carga c = i.next();
 				if (capacidad > c.getPeso()) {
-					System.out.println("se agregó");
+					System.out.println("se agregï¿½");
 					c.setId_buque(rb.getId_buque());
 					addTipoCarga(c, daoCargas, daoRegistroCargas);
 					capacidad -= c.getPeso();
@@ -960,7 +965,7 @@ public class PuertoAndesMaster {
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
-				throw new Exception("No se tienen los privilegios para realizar esta acción.");
+				throw new Exception("No se tienen los privilegios para realizar esta acciï¿½n.");
 
 			daoCargas.setConn(conn);
 			daoCargas.updateCarga(carga);
@@ -1046,7 +1051,7 @@ public class PuertoAndesMaster {
 			String date = sdf.format(new Date());
 			RegistroTerminal rt = new RegistroTerminal(auxId++, date, b.getId(), b.getIdTerminal(), "SALIDA");
 			daoBuques.registrarSalidaBuque(b); // Cambia el id del terminal del
-												// buque a null si tenía una
+												// buque a null si tenï¿½a una
 												// terminal.
 
 			daoRegistroTerminales.setConn(conn);
