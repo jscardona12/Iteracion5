@@ -157,7 +157,6 @@ public class VideoAndesMaster {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();		
 		jms = new JMSManager();
-		jms.inicializarContexto();
 		System.out.println("HAPPENING");
 	}
 
@@ -2191,5 +2190,17 @@ public class VideoAndesMaster {
 			}
 		}
 		return resp;
+	}
+
+
+
+
+	public void iniciarRF14() {
+		try {
+			jms.empezarRF14();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

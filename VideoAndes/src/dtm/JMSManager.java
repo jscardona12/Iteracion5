@@ -118,6 +118,10 @@ public class JMSManager
 	 */
 	private TopicPublisher topicPublisher;
 
+	public JMSManager(){
+		inicializarTopic();
+	}
+	
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
@@ -256,12 +260,19 @@ public class JMSManager
 		}
 	}
 
-	public void rf14(Queue cola){
-
+	public void empezarRF14() throws JMSException{
+		String mensaje = "RF14";
+		TextMessage tm = ts2.createTextMessage(mensaje);
+		topicPublisher.publish(tm);
+		
+	}
+	
+	public void responderRF14(Queue cola){
+		System.out.println("Va a responer rf14");
 	}
 
-	public void rf15(Queue cola){
-		
+	public void responderRF15(Queue cola){
+		System.out.println("Va a responer rf15");		
 	}
 	
 	public class Listener1 implements MessageListener
@@ -271,9 +282,9 @@ public class JMSManager
 				TextMessage t = (TextMessage) msg;
 				String texto = t.getText();
 				if(texto.equals("RF14")){
-					rf14(cola1);
+					responderRF14(cola1);
 				}else if(texto.equals("RF15")){
-					rf15(cola1);
+					responderRF15(cola1);
 				}
 			}catch(Exception e){
 				e.printStackTrace();
@@ -287,7 +298,7 @@ public class JMSManager
 				TextMessage t = (TextMessage) msg;
 				String texto = t.getText();
 				if(texto.equals("RF14")){
-					rf14(cola3);
+					responderRF14(cola3);
 				}
 			}catch(Exception e){
 				e.printStackTrace();

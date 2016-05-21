@@ -31,77 +31,77 @@ import vos.MovimientoCarga;
 @Path("cargas")
 public class CargaService {
 
-  // Servicios REST tipo GET:
+	// Servicios REST tipo GET:
 
 
-  /**
-   * Atributo que usa la anotación @Context para tener el ServletContext de la conexión actual.
-   */
-  @Context
-  private ServletContext context;
+	/**
+	 * Atributo que usa la anotación @Context para tener el ServletContext de la conexión actual.
+	 */
+	@Context
+	private ServletContext context;
 
-  /**
-   * Método que retorna el path de la carpeta WEB-INF/ConnectionData en el deploy actual dentro del servidor.
-   * @return path de la carpeta WEB-INF/ConnectionData en el deploy actual.
-   */
-  private String getPath() {
-    return context.getRealPath("WEB-INF/ConnectionData");
-  }
-  
-  
-  private String doErrorMessage(Exception e){
-    return "{ \"ERROR\": \""+ e.getMessage() + "\"}" ;
-  }
-  
-  /**
-   * Método que expone servicio REST usando PUT para recoger una carga de un área de almacenamiento
-   * @return
-   */
-  @PUT
-  @Path("recogerCarga/")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response recogerCarga(@QueryParam("user") int idUser, Carga carga) {
-    VideoAndesMaster tm = new VideoAndesMaster(getPath());
-    ListaBuques videos;
-    try {
-      tm.recogerCarga(carga, idUser);
-    } catch (Exception e) {
-      return Response.status(500).entity(doErrorMessage(e)).build();
-    }
-    return Response.status(200).entity(carga).build();
-  }
-  
-  
-  // RFC5
-  @GET
-  @Path("movimientosCarga")
-  @Produces({ MediaType.APPLICATION_JSON })
-  public Response darMovimientosCarga(@QueryParam("persona") int idPersona,
-                                      @QueryParam("fechaInicio") String inicio,
-                                      @QueryParam("fechaFin") String fin)
-  {
-    VideoAndesMaster tm = new VideoAndesMaster(getPath());
-    List<MovimientoCarga> lista;
-    try {
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-      Date inicioD = (inicio == null) ? null : sdf.parse(inicio);
-      Date finD = (fin == null) ? null : sdf.parse(fin);
-      
-      lista = tm.darMovimientosCarga(idPersona, inicioD, finD);
-    } catch (Exception e) {
-      e.printStackTrace();
-      return Response.status(500).entity(doErrorMessage(e)).build();
-    }
-    return Response.status(200).entity(lista).build();
-  }
+	/**
+	 * Método que retorna el path de la carpeta WEB-INF/ConnectionData en el deploy actual dentro del servidor.
+	 * @return path de la carpeta WEB-INF/ConnectionData en el deploy actual.
+	 */
+	private String getPath() {
+		return context.getRealPath("WEB-INF/ConnectionData");
+	}
 
-  /**
-   * Método que expone servicio REST usando PUT que agrega el video que recibe en Json
-   * <b>URL: </b> http://"ip o nombre de host":8080/VideoAndes/rest/personas/importador
-   * @param exportador - video a agregar
-   * @return Json con el video que agrego o Json con el error que se produjo
-   */
+
+	private String doErrorMessage(Exception e){
+		return "{ \"ERROR\": \""+ e.getMessage() + "\"}" ;
+	}
+
+	/**
+	 * Método que expone servicio REST usando PUT para recoger una carga de un área de almacenamiento
+	 * @return
+	 */
+	@PUT
+	@Path("recogerCarga/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response recogerCarga(@QueryParam("user") int idUser, Carga carga) {
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		ListaBuques videos;
+		try {
+			tm.recogerCarga(carga, idUser);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(carga).build();
+	}
+
+
+	// RFC5
+	@GET
+	@Path("movimientosCarga")
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response darMovimientosCarga(@QueryParam("persona") int idPersona,
+			@QueryParam("fechaInicio") String inicio,
+			@QueryParam("fechaFin") String fin)
+	{
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		List<MovimientoCarga> lista;
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date inicioD = (inicio == null) ? null : sdf.parse(inicio);
+			Date finD = (fin == null) ? null : sdf.parse(fin);
+
+			lista = tm.darMovimientosCarga(idPersona, inicioD, finD);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
+	}
+
+	/**
+	 * Método que expone servicio REST usando PUT que agrega el video que recibe en Json
+	 * <b>URL: </b> http://"ip o nombre de host":8080/VideoAndes/rest/personas/importador
+	 * @param exportador - video a agregar
+	 * @return Json con el video que agrego o Json con el error que se produjo
+	 */
 	@GET
 	@Path("movimientosCarga2")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ public class CargaService {
 			@QueryParam(value = "user") Integer usuario,
 			@QueryParam(value = "tipo_carga") String tipoCarga
 			) {
-		
+
 		VideoAndesMaster tm = new VideoAndesMaster(getPath());
 		ListaMovimientoCarga2 lista;
 		try {
@@ -120,5 +120,22 @@ public class CargaService {
 
 		return Response.status(200).entity(lista).build();
 	}
-  
+
+	/**
+	 * Método que expone servicio REST usando PUT que agrega el video que recibe en Json
+	 * <b>URL: </b> http://"ip o nombre de host":8080/VideoAndes/rest/personas/importador
+	 * @param exportador - video a agregar
+	 * @return Json con el video que agrego o Json con el error que se produjo
+	 */
+	@GET
+	@Path("rf14")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response darMovimientosCargaExportadorConValorMayorA() {
+
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		tm.iniciarRF14();
+
+		return Response.status(200).entity("").build();
+	}
+
 }
