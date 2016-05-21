@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import vos.*;
 import dao.*;
+import dtm.PuertoAndesQueue;
 
 /**
  * Fachada en patron singleton de la aplicación
