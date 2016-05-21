@@ -1,5 +1,5 @@
 
-package tm;
+package dtm;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -60,7 +60,7 @@ public class PuertoAndesQueue
 			System.out.println("HOLA");
 			context = new InitialContext();
 			//inicializa datasource por jndi
-			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
+			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie1");
 			System.out.println("HOLA1");
 			//inicializa la fabrica de conexiones jms
 			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
@@ -108,7 +108,7 @@ public class PuertoAndesQueue
 			TextMessage msg = session.createTextMessage(); String peticion="";
 			msg.setText(peticion);
 			producer.send(msg);
-			System.out.println("PuertoAndes 0206 - Se envió: "+peticion);
+			System.out.println("PuertoAndes 0206 - Se enviï¿½: "+peticion);
 
 			//Si se envio de forma correcta el mensaje y se realizaron los cambios
 			//se hace commit
