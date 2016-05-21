@@ -504,7 +504,7 @@
                     <jms-queue name="WebApp2">
                         <entry name="queue/WebApp2"/>
                     </jms-queue>
-                    <jms-queue name="WebApp2">
+                    <jms-queue name="WebApp3">
                         <entry name="queue/WebApp3"/>
                     </jms-queue>
 
@@ -515,7 +515,7 @@
                     <jms-topic name="WebApp2">
                         <entry name="topic/WebApp2"/>
                     </jms-topic>
-                    <jms-topic name="WebApp2">
+                    <jms-topic name="WebApp3">
                         <entry name="topic/WebApp3"/>
                     </jms-topic>
                 </jms-destinations>
