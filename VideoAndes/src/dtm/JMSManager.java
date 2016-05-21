@@ -67,6 +67,7 @@ public class JMSManager
 	/**
 	 * Cola definida para recepcion de mensajes
 	 */
+
 	private Queue miCola;
 	/**
 	 * Cola definida para enviar a puerto 1
@@ -135,6 +136,7 @@ public class JMSManager
 	}
 
 	public void inicializarAmbos(){
+
 		try {
 			context = new InitialContext();
 
@@ -167,7 +169,6 @@ public class JMSManager
 			cola1 = (Queue) context.lookup("queue/WebApp1");
 			cola3 = (Queue) context.lookup("queue/WebApp3");
 			conm = cf.createConnection();
-
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
