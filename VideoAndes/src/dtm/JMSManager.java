@@ -21,11 +21,19 @@ import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.transaction.UserTransaction;
 
 /**
@@ -59,22 +67,107 @@ public class JMSManager
 	/**
 	 * Cola definida para recepcion de mensajes
 	 */
-	private Queue colaDefinida;
-	
-	public void inicializarContexto(){
+	private Queue miCola;
+	/**
+	 * Cola definida para enviar a puerto 1
+	 */
+	private Queue cola1;
+	/**
+	 * Cola definida para enviar a puerto 3
+	 */
+	private Queue cola3;
+	/**
+	 * Conexion al topico
+	 */
+	private TopicConnection connTopic;
+	/**
+	 * Crea una sesion del topic1
+	 */
+	private TopicSession ts1;
+	/**
+	 * Crea una sesion del topic2
+	 */
+	private TopicSession ts2;
+	/**
+	 * Crea una sesion del topic3
+	 */
+	private TopicSession ts3;
+	/**
+	 * Topico
+	 */
+	private Topic t1;
+	/**
+	 * Topico
+	 */
+	private Topic t2;
+	/**
+	 * Topico
+	 */
+	private Topic t3;
+	/**
+	 * Suscribirse a puerto 1
+	 */
+	private TopicSubscriber topicSubs1;
+	/**
+	 * Suscribirse a puerto 3
+	 */
+	private TopicSubscriber topicSubs3;
+	/**
+	 * yo
+	 */
+	private TopicPublisher topicPublisher;
+
+	public void inicializarTopic(){
+		inicializarAmbos();
+		try{
+			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
+			connTopic=tcf.createTopicConnection();
+			t1=(Topic) context.lookup("topic/WebApp1");
+			t2=(Topic) context.lookup("topic/WebApp2");
+			t3=(Topic) context.lookup("topic/WebApp3");
+			ts1 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts2 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts3 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			connTopic.start();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public void inicializarAmbos(){
 		try {
 			context = new InitialContext();
-			
-			UserTransaction utx = (UserTransaction) context.lookup("java:comp/UserTransaction");
-			
-			//inicializa datasource por jndi
-			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
+
 			//inicializa la fabrica de conexiones jms
 			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
+
+		} catch (NamingException e) {
+			System.out.println("Error");
+		}
+
+	}
+
+	public void subscribe() throws JMSException{
+		inicializarTopic();
+		topicSubs1 = ts1.createSubscriber(t1);
+		topicSubs3 = ts3.createSubscriber(t3);
+		topicPublisher = ts2.createPublisher(t2);
+		topicSubs1.setMessageListener(new Listener1());
+		topicSubs3.setMessageListener(new Listener3());
+	}
+
+	public void inicializarContexto(){
+		inicializarAmbos();
+		try {
+
+			//inicializa datasource por jndi
+			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
 			//accede a la cola de la web app 2
-			colaDefinida=(Queue) context.lookup("queue/WebApp2");
+			miCola=(Queue) context.lookup("queue/WebApp2");
+			cola1 = (Queue) context.lookup("queue/WebApp1");
+			cola3 = (Queue) context.lookup("queue/WebApp3");
 			conm = cf.createConnection();
-			
+
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -107,7 +200,7 @@ public class JMSManager
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			//Crea una sesion para producir mensajes hacia la cola que habiamos creado
-			MessageProducer producer = session.createProducer(colaDefinida);
+			MessageProducer producer = session.createProducer(miCola);
 
 			//Existen otros tipos de mensajes.
 			//En este caso utilizamos un mensaje simple de texto para enviar la informacion
@@ -135,7 +228,7 @@ public class JMSManager
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			//Crea una sesion para producir mensajes hacia la cola que habiamos creado
-			MessageConsumer consumer = session.createConsumer(colaDefinida);
+			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
 
 			//Recibimos un mensaje
@@ -161,114 +254,42 @@ public class JMSManager
 
 		}
 	}
-	private String[] args;
 
-	protected boolean failure = false;
+	public void rf14(Queue cola){
 
-	protected void run(final String[] args1)
-	{
-		this.args = args1;
-		//if we have a cluster of servers wait a while for the cluster to form properly
-		if(args != null && args.length > 1)
-		{
-			System.out.println("****pausing to allow cluster to form****");
-			Thread.yield();
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				//ignore
-			}
-		}
-
-		try {
-			if (!runExample()) {
-				failure = true;
-			}
-			System.out.println("example complete");
-		} catch (Throwable e) {
-			failure = true;
-			e.printStackTrace();
-		}
-
-
-		if (failure) {
-			System.err.println("FAILURE!");
-		} else {
-			System.out.println("OK.");
-		}
 	}
 
-	public static void main(final String[] args)
-	{
-		new JMSManager().run(args);
+	public void rf15(Queue cola){
+		
 	}
-
-	protected InitialContext getContext(final int serverId) throws Exception
+	
+	public class Listener1 implements MessageListener
 	{
-		//      HornetQExample.log.info("using " + args[serverId] + " for jndi");
-		Properties props = new Properties();
-		props.put("java.naming.factory.initial","org.jnp.interfaces.NamingContextFactory");
-		props.put("java.naming.provider.url", args[serverId]);
-		props.put("java.naming.factory.url.pkgs","org.jboss.naming:org.jnp.interfaces");
-		return new InitialContext(props);
-	}
-
-
-	public boolean runExample() throws Exception
-	{
-		javax.jms.Connection connection = null;
-		InitialContext initialContext = null;
-		try
-		{
-			// Step 1. Create an initial context to perform the JNDI lookup.
-			initialContext = getContext(0);
-
-			// Step 2. Perfom a lookup on the queue
-			Queue queue = (Queue)initialContext.lookup("/queue/exampleQueue");
-
-			// Step 3. Perform a lookup on the Connection Factory
-			ConnectionFactory conf = (ConnectionFactory)initialContext.lookup("/ConnectionFactory");
-
-			// Step 4.Create a JMS Connection
-			connection = conf.createConnection();
-
-			// Step 5. Create a JMS Session
-			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-			// Step 6. Create a JMS Message Producer
-			MessageProducer producer = session.createProducer(queue);
-
-			// Step 7. Create a Text Message
-			TextMessage message = session.createTextMessage("This is a text message");
-
-			System.out.println("Sent message: " + message.getText());
-
-			// Step 8. Send the Message
-			producer.send(message);
-
-			// Step 9. Create a JMS Message Consumer
-			MessageConsumer messageConsumer = session.createConsumer(queue);
-
-			// Step 10. Start the Connection
-			connection.start();
-
-			// Step 11. Receive the message
-			TextMessage messageReceived = (TextMessage)messageConsumer.receive(5000);
-
-			System.out.println("Received message: " + messageReceived.getText());
-
-			return true;
-		}
-		finally
-		{
-			// Step 12. Be sure to close our JMS resources!
-			if (initialContext != null)
-			{
-				initialContext.close();
+		public void onMessage(Message msg){
+			try{
+				TextMessage t = (TextMessage) msg;
+				String texto = t.getText();
+				if(texto.equals("RF14")){
+					rf14(cola1);
+				}else if(texto.equals("RF15")){
+					rf15(cola1);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
 			}
-			if (connection != null)
-			{
-				connection.close();
+		}
+	}
+	public class Listener3 implements MessageListener
+	{
+		public void onMessage(Message msg){
+			try{
+				TextMessage t = (TextMessage) msg;
+				String texto = t.getText();
+				if(texto.equals("RF14")){
+					rf14(cola3);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
 			}
 		}
 	}
