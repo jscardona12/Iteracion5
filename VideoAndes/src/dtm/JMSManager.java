@@ -25,6 +25,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
@@ -61,6 +62,13 @@ public class JMSManager
 	 */
 	private Queue colaDefinida;
 	
+	
+	/**
+   * Cola definida para recepcion de mensajes
+   */
+	private Queue queuePuerto1, queuePuerto3;
+  private Topic topicPuerto1, topicPuerto3;
+	
 	public void inicializarContexto(){
 		try {
 			context = new InitialContext();
@@ -74,6 +82,11 @@ public class JMSManager
 			//accede a la cola de la web app 2
 			colaDefinida=(Queue) context.lookup("queue/WebApp2");
 			conm = cf.createConnection();
+			
+			queuePuerto1= (Queue)context.lookup("queue/WebApp1");
+			queuePuerto3= (Queue)context.lookup("queue/WebApp3");
+			topicPuerto1= (Topic)context.lookup("topic/WebApp1");
+			topicPuerto3= (Topic)context.lookup("topic/WebApp3");
 			
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
