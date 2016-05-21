@@ -496,9 +496,28 @@
                     <jms-queue name="DLQ">
                         <entry name="java:/jms/queue/DLQ"/>
                     </jms-queue>
-                     <jms-queue name="WebApp2">
+
+                    <!-- QUEUES -->
+                    <jms-queue name="WebApp1">
+                        <entry name="queue/WebApp1"/>
+                    </jms-queue>
+                    <jms-queue name="WebApp2">
                         <entry name="queue/WebApp2"/>
                     </jms-queue>
+                    <jms-queue name="WebApp2">
+                        <entry name="queue/WebApp3"/>
+                    </jms-queue>
+
+                    <!-- TOPICS -->
+                    <jms-topic name="WebApp1">
+                        <entry name="topic/WebApp1"/>
+                    </jms-topic>
+                    <jms-topic name="WebApp2">
+                        <entry name="topic/WebApp2"/>
+                    </jms-topic>
+                    <jms-topic name="WebApp2">
+                        <entry name="topic/WebApp3"/>
+                    </jms-topic>
                 </jms-destinations>
             </hornetq-server>
         </subsystem>
