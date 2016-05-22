@@ -158,7 +158,7 @@ public class JMSManager
 			context = new InitialContext();
 
 			//inicializa la fabrica de conexiones jms
-			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
+			cf=(ConnectionFactory) context.lookup("java:/ConnectionFactory");
 
 		} catch (NamingException e) {
 			System.out.println("Error");
@@ -170,8 +170,12 @@ public class JMSManager
 		topicSubs1 = ts3.createSubscriber(t1);
 		topicSubs2 = ts3.createSubscriber(t2);
 		topicPublisher = ts3.createPublisher(t3);
-		topicSubs1.setMessageListener(new Listener1());
-		topicSubs2.setMessageListener(new Listener2());
+		
+		MessageListener msglistener1 = new Listener1();
+		MessageListener msglistener2 = new Listener2();
+		
+		topicSubs1.setMessageListener(msglistener1);
+		topicSubs2.setMessageListener(msglistener2);
 	}
 
 	public void inicializarContexto(){
@@ -286,6 +290,7 @@ public class JMSManager
 	public void responderRF15(Queue cola){
 		System.out.println("Va a responer rf15");		
 	}
+	
 	
 	public class Listener1 implements MessageListener
 	{
