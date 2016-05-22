@@ -166,16 +166,14 @@ public class JMSManager
 	}
 
 	public void subscribe() throws JMSException{
-		inicializarTopic();
-		topicSubs1 = ts1.createSubscriber(t1);
-		topicSubs2 = ts2.createSubscriber(t2);
+		topicSubs1 = ts1.createSubscriber(t3);
+		topicSubs2 = ts2.createSubscriber(t3);
 		topicPublisher = ts3.createPublisher(t3);
 		topicSubs1.setMessageListener(new Listener1());
 		topicSubs2.setMessageListener(new Listener2());
 	}
 
 	public void inicializarContexto(){
-		inicializarAmbos();
 		try {
 
 			//inicializa datasource por jndi
