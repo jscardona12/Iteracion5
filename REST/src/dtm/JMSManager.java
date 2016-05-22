@@ -341,9 +341,9 @@ public class JMSManager {
 		int descuento = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
-		System.out.println("va a publicar RF15P1 - AN");
+		System.out.println("va a publicar RF15P1 - AN " + rut);
 		topicPublisher.publish(msg);
-		System.out.println("publico RF15P1 - AN");
+		System.out.println("publico RF15P1 - AN " + rut);
 		try {
 			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
@@ -392,7 +392,7 @@ public class JMSManager {
 			System.out.println(sql);
 
 			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206");
+			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - AN");
 			// Si se envio de forma correcta el mensaje y se realizaron los
 			// cambios
 			// se hace commit
@@ -404,7 +404,7 @@ public class JMSManager {
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
-		System.out.println("va a publicar RF15P2 - AN");
+		System.out.println("va a publicar RF15P2 - AN " + rut + " descuento: " + descuento);
 		topicPublisher.publish(msgFinal);
 		System.out.println("publico RF15P2 - AN");
 		return descuento;
