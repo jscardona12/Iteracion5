@@ -1518,13 +1518,10 @@ public class PuertoAndesMaster {
 	}
 	
 
-	public void iniciarRF14() {
-		try {
+	public void iniciarRF14() throws JMSException {
+		
 			jms.empezarRF14();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
 	}
 	
 }
