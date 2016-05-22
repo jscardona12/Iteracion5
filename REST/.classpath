@@ -11,6 +11,12 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/javax.transaction.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/hornetq-core-client.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/hornetq-jms-client.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/jboss-jms-api.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/jnp-client.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/netty.jar"/>
+	<classpathentry kind="lib" path="/PuertoAndes06/WebContent/WEB-INF/lib/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Juan/Documents/Universidad/Iteracion5/Iteracion5/javax.transaction.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
