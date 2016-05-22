@@ -104,6 +104,20 @@ public class PuertoAndesBuquesServices {
 		return Response.status(200).entity(rb).build();
 	}
 	
+	@PUT
+	@Path("rf14")
+	@Produces({MediaType.APPLICATION_JSON})
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response rf14(){
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		try {
+			tm.iniciarRF14();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity("Done").build();
+	}
+	
 	@POST
 	@Path("deshabilitar_buque/{tipo}")
 	@Produces({MediaType.APPLICATION_JSON})

@@ -74,13 +74,21 @@ public class JMSManager
 	 */
 	private Queue cola1;
 	/**
-	 * Cola definida para enviar a puerto 3
+	 * Cola definida para enviar a puerto 2
 	 */
-	private Queue cola3;
+	private Queue cola2;
 	/**
-	 * Conexion al topico
+	 * Conexion al topico 1
 	 */
-	private TopicConnection connTopic;
+	private TopicConnection connTopic1;
+	/**
+	 * Conexion al topico 2
+	 */
+	private TopicConnection connTopic2;
+	/**
+	 * Conexion al topico 3
+	 */
+	private TopicConnection connTopic3;
 	/**
 	 * Crea una sesion del topic1
 	 */
@@ -110,9 +118,9 @@ public class JMSManager
 	 */
 	private TopicSubscriber topicSubs1;
 	/**
-	 * Suscribirse a puerto 3
+	 * Suscribirse a puerto 2
 	 */
-	private TopicSubscriber topicSubs3;
+	private TopicSubscriber topicSubs2;
 	/**
 	 * yo
 	 */
@@ -126,14 +134,18 @@ public class JMSManager
 		inicializarAmbos();
 		try{
 			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
-			connTopic=tcf.createTopicConnection();
+			connTopic1 =tcf.createTopicConnection();
+			connTopic2 =tcf.createTopicConnection();
+			connTopic3 =tcf.createTopicConnection();
 			t1=(Topic) context.lookup("topic/WebApp1");
 			t2=(Topic) context.lookup("topic/WebApp2");
 			t3=(Topic) context.lookup("topic/WebApp3");
-			ts1 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			ts2 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			ts3 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			connTopic.start();
+			ts1 = connTopic1.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			connTopic1.start();
+			connTopic2.start();
+			connTopic3.start();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -156,10 +168,10 @@ public class JMSManager
 	public void subscribe() throws JMSException{
 		inicializarTopic();
 		topicSubs1 = ts1.createSubscriber(t1);
-		topicSubs3 = ts3.createSubscriber(t3);
-		topicPublisher = ts2.createPublisher(t2);
+		topicSubs2 = ts2.createSubscriber(t2);
+		topicPublisher = ts3.createPublisher(t3);
 		topicSubs1.setMessageListener(new Listener1());
-		topicSubs3.setMessageListener(new Listener3());
+		topicSubs2.setMessageListener(new Listener2());
 	}
 
 	public void inicializarContexto(){
@@ -169,9 +181,9 @@ public class JMSManager
 			//inicializa datasource por jndi
 			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
 			//accede a la cola de la web app 2
-			miCola=(Queue) context.lookup("queue/WebApp2");
+			miCola=(Queue) context.lookup("queue/WebApp3");
 			cola1 = (Queue) context.lookup("queue/WebApp1");
-			cola3 = (Queue) context.lookup("queue/WebApp3");
+			cola2 = (Queue) context.lookup("queue/WebApp2");
 			conm = cf.createConnection();
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
@@ -282,7 +294,7 @@ public class JMSManager
 				TextMessage t = (TextMessage) msg;
 				String texto = t.getText();
 				if(texto.equals("RF14")){
-					responderRF14(cola1);
+					responderRF14(cola2);
 				}else if(texto.equals("RF15")){
 					responderRF15(cola1);
 				}
@@ -291,14 +303,14 @@ public class JMSManager
 			}
 		}
 	}
-	public class Listener3 implements MessageListener
+	public class Listener2 implements MessageListener
 	{
 		public void onMessage(Message msg){
 			try{
 				TextMessage t = (TextMessage) msg;
 				String texto = t.getText();
 				if(texto.equals("RF14")){
-					responderRF14(cola3);
+					responderRF14(cola2);
 				}
 			}catch(Exception e){
 				e.printStackTrace();
