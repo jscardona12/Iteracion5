@@ -332,9 +332,9 @@ public class PuertoAndesQueue
 		int descuento = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
-		System.out.println("va a publicar RF15P1 - AN");
+		System.out.println("va a publicar RF15P1 - JS");
 		topicPublisher.publish(msg);
-		System.out.println("publico RF15P1 - AN");
+		System.out.println("publico RF15P1 - JS");
 		try {
 			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
@@ -352,21 +352,21 @@ public class PuertoAndesQueue
 
 			int numClientes = 0;
 
-			System.out.println("Esperando 1 mensaje RF15 - AN...");
+			System.out.println("Esperando 1 mensaje RF15 - JS...");
 			Message msn = consumer.receive();
 			TextMessage txt = (TextMessage) msn;
 			String respuesta1 = txt.getText();
 			if (respuesta1.contains("SI"))
 				numClientes++;
 
-			System.out.println("Esperando 2 mensaje RF15 - AN...");
+			System.out.println("Esperando 2 mensaje RF15 - JS...");
 			Message msn2 = consumer.receive();
 			TextMessage txt2 = (TextMessage) msn2;
 			String respuesta2 = txt2.getText();
 			if (respuesta2.contains("SI"))
 				numClientes++;
 
-			System.out.println("El exportador existe en " + numClientes + " bd - AN");
+			System.out.println("El exportador existe en " + numClientes + " bd - JS");
 
 			switch (numClientes) {
 			case 2:
@@ -395,9 +395,9 @@ public class PuertoAndesQueue
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
-		System.out.println("va a publicar RF15P2 - AN");
+		System.out.println("va a publicar RF15P2 - JS");
 		topicPublisher.publish(msgFinal);
-		System.out.println("publico RF15P2 - AN");
+		System.out.println("publico RF15P2 - JS");
 		return descuento;
 	}
 
@@ -416,7 +416,7 @@ public class PuertoAndesQueue
 			// *******************************************************
 
 			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - AN");
+			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - JS");
 
 			utx.commit();
 			cerrarConexion();
@@ -425,7 +425,7 @@ public class PuertoAndesQueue
 	}
 
 	public void responderRF15(Queue cola, String rut) {
-		System.out.println("Va a responer rf15 - AN");
+		System.out.println("Va a responer rf15 - JS");
 		try {
 			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
@@ -434,7 +434,7 @@ public class PuertoAndesQueue
 			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR PARAMETRO
 			Statement st = conn1.createStatement();
 			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
-			System.out.println(sql + " - AN");
+			System.out.println(sql + " - JS");
 			ResultSet rs = st.executeQuery(sql);
 			boolean existe = rs.next();
 			st.close();
@@ -454,7 +454,7 @@ public class PuertoAndesQueue
 			String peticion = existe ? "SI" : "NO";
 			msg.setText(peticion);
 			producer.send(msg);
-			System.out.println("Se envio " + peticion + " - AN");
+			System.out.println("Se envio " + peticion + " - JS");
 
 			cerrarConexion();
 
