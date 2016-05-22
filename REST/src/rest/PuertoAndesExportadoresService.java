@@ -3,6 +3,7 @@ package rest;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -33,6 +34,20 @@ public class PuertoAndesExportadoresService {
 	
 	private String doErrorMessage(Exception e){
 		return "{ \"ERROR\": \""+ e.getMessage() + "\"}" ;
+	}
+	
+	@PUT
+	@Path("/bono/{rut}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response consultarBono(@javax.ws.rs.PathParam("rut") String rut) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		int descuento;
+		try {
+			descuento = tm.consultarBono(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(descuento).build();
 	}
 	
 	@POST

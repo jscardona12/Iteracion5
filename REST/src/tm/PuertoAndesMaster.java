@@ -24,6 +24,7 @@ import dao.DAOTablaRegistroBuques;
 import dao.DAOTablaRegistroCargas;
 import dao.DAOTablaRegistroTerminales;
 import dao.DAOTablaUsuarios;
+import dtm.CargaUnificada;
 import dtm.JMSManager;
 import vos.AreaAlmacenamiento;
 import vos.Buque;
@@ -845,7 +846,7 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public void iniciarRF14(RegistroBuque rb) throws JMSException {
+	public void iniciarRF14(RegistroBuque rb) throws Exception {
 		DAOTablaBuques daoBuques = new DAOTablaBuques();
 		DAOTablaUsuarios daoUsuarios = new DAOTablaUsuarios();
 		DAOTablaCargas daoCargas = new DAOTablaCargas();
@@ -864,7 +865,7 @@ public class PuertoAndesMaster {
 			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
 
 			daoCargas.setConn(conn);
-			ArrayList<Carga> listaCarga = (ArrayList<Carga>) daoCargas.cargasDelBuque(b.getId());
+			ArrayList<Carga> listaCarga = (ArrayList<Carga>) daoCargas.cargasDelBuque(buque.getId());
 
 			// Forza el destino para puerto andes para poder descargar el buque.
 			for (Carga c : listaCarga) {
@@ -902,7 +903,10 @@ public class PuertoAndesMaster {
 						cargasHuerfanas.add(temp);
 				}
 			}
-
+			if(!cargasHuerfanas.isEmpty()){
+				jms.empezarRF14(estandarizarCargas(cargasHuerfanas));
+			}
+			
 			conn.commit();
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
@@ -927,6 +931,18 @@ public class PuertoAndesMaster {
 				throw exception;
 			}
 		}
+	}
+	
+	public int consultarBono(String rut) throws JMSException{
+		return jms.empezarRF15(rut);
+	}
+	
+	private ArrayList<CargaUnificada> estandarizarCargas(ArrayList<Carga> cargas){
+		ArrayList<CargaUnificada> cargasUnificadas = new ArrayList<>();
+		for(Carga c : cargas){
+			cargasUnificadas.add(new CargaUnificada(c.getPeso(),c.getVolumen(), c.getTipo(), 1000));
+		}
+		return cargasUnificadas;
 	}
 
 	public void cargarBuque(RegistroBuque rb) throws Exception {
