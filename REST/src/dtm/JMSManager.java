@@ -273,10 +273,11 @@ public class JMSManager
 	}
 
 	public void empezarRF14() throws JMSException{
+		System.out.println("va a publicar RF14");
 		String mensaje = "RF14";
-		TextMessage tm = ts2.createTextMessage(mensaje);
+		TextMessage tm = ts3.createTextMessage(mensaje);
 		topicPublisher.publish(tm);
-		
+		System.out.println("publico RF14");
 	}
 	
 	public void responderRF14(Queue cola){

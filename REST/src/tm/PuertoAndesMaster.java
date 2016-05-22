@@ -106,6 +106,13 @@ public class PuertoAndesMaster {
 		
 		jms = new JMSManager();
 		jms.inicializarContexto();
+		try {
+			jms.subscribe();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("Error al subscribir");
+		}
 		System.out.println("Funciona");
 	}
 
@@ -845,13 +852,8 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public void iniciarRF14() {
-		try {
-			jms.empezarRF14();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void iniciarRF14() throws JMSException {
+		jms.empezarRF14();
 	}
 
 	public void cargarBuque(RegistroBuque rb) throws Exception {
