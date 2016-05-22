@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import javax.jms.JMSException;
+
 import vos.*;
 import dao.*;
 import dtm.PuertoAndesQueue;
@@ -54,6 +56,8 @@ public class PuertoAndesMaster {
 	 * Conexión a la base de datos
 	 */
 	private Connection conn;
+	
+	private PuertoAndesQueue jms;
 
 
 	/**
@@ -65,8 +69,8 @@ public class PuertoAndesMaster {
 	 */
 	public PuertoAndesMaster(String contextPathP) {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
-		PuertoAndesQueue a = new PuertoAndesQueue();
-		a.inicializarContexto();
+		jms = new PuertoAndesQueue();
+		jms.inicializarContexto();
 		initConnectionData();
 	}
 
@@ -1514,7 +1518,14 @@ public class PuertoAndesMaster {
 	}
 	
 
-
+	public void iniciarRF14() {
+		try {
+			jms.empezarRF14();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 }
 

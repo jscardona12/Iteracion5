@@ -118,6 +118,11 @@ public class PuertoAndesQueue
 	 * yo
 	 */
 	private TopicPublisher topicPublisher;
+	
+	public PuertoAndesQueue()
+	{
+		inicializarTopic();
+	}
 
 	public void inicializarTopic(){
 		inicializarAmbos();

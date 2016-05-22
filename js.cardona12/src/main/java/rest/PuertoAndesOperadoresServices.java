@@ -373,7 +373,16 @@ public class PuertoAndesOperadoresServices {
 		return Response.status(200).entity("se insertaron los datos").build();
 	}
 
+	@GET
+	@Path("rf14")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response rf14() {
 
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		tm.iniciarRF14();
+
+		return Response.status(200).entity("").build();
+	}
 
 
 }
