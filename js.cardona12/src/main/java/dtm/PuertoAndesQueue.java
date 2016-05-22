@@ -1,4 +1,3 @@
-
 package dtm;
 
 import java.sql.Connection;
@@ -52,6 +51,10 @@ public class PuertoAndesQueue
 	 * Fabrica de conexiones para el envio de mensajes a la cola
 	 */
 	private ConnectionFactory cf;
+	/**
+	 * Fabrica de conexiones para el envio de mensajes al topic
+	 */
+	private TopicConnectionFactory tcf;
 
 	/**
 	 * Conexion a la cola de mensajes
@@ -118,16 +121,21 @@ public class PuertoAndesQueue
 	 * yo
 	 */
 	private TopicPublisher topicPublisher;
-	
-	public PuertoAndesQueue()
-	{
-		inicializarTopic();
-	}
 
+	public PuertoAndesQueue(){
+		inicializarTopic();
+		try {
+			subscribe();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
-			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
+			tcf = (TopicConnectionFactory) context.lookup("java:/ConnectionFactory");
 			connTopic1=tcf.createTopicConnection();
 			connTopic2=tcf.createTopicConnection();
 			connTopic3=tcf.createTopicConnection();
@@ -137,7 +145,6 @@ public class PuertoAndesQueue
 			ts1 = connTopic1.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			subscribe();
 			connTopic1.start();
 			connTopic2.start();
 			connTopic3.start();
@@ -153,7 +160,7 @@ public class PuertoAndesQueue
 			context = new InitialContext();
 
 			//inicializa la fabrica de conexiones jms
-			cf=(ConnectionFactory) context.lookup("java:jboss/exported/jms/RemoteConnectionFactory");
+			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
 
 		} catch (NamingException e) {
 			System.out.println("Error");
@@ -162,8 +169,9 @@ public class PuertoAndesQueue
 	}
 
 	public void subscribe() throws JMSException{
-		topicSubs2 = ts1.createSubscriber(t2);
-		topicSubs3 = ts1.createSubscriber(t3);
+		
+		topicSubs2 = ts2.createSubscriber(t2);
+		topicSubs3 = ts3.createSubscriber(t3);
 		topicPublisher = ts1.createPublisher(t1);
 		topicSubs2.setMessageListener(new Listener2());
 		topicSubs3.setMessageListener(new Listener3());

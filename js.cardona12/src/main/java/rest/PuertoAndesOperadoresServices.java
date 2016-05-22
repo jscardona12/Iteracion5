@@ -14,6 +14,7 @@ package rest;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
+import javax.jms.JMSException;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -376,7 +377,7 @@ public class PuertoAndesOperadoresServices {
 	@GET
 	@Path("rf14")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response rf14() {
+	public Response rf14()  throws JMSException {
 
 		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
 		tm.iniciarRF14();
