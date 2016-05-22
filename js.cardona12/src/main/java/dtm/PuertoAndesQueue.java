@@ -71,9 +71,17 @@ public class PuertoAndesQueue
 	 */
 	private Queue cola3;
 	/**
-	 * Conexion al topico
+	 * Conexion al topico 1
 	 */
-	private TopicConnection connTopic;
+	private TopicConnection connTopic1;
+	/**
+	 * Conexion al topico 2
+	 */
+	private TopicConnection connTopic2;
+	/**
+	 * Conexion al topico 3
+	 */
+	private TopicConnection connTopic3;
 	/**
 	 * Crea una sesion del topic1
 	 */
@@ -115,14 +123,19 @@ public class PuertoAndesQueue
 		inicializarAmbos();
 		try{
 			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
-			connTopic=tcf.createTopicConnection();
+			connTopic1=tcf.createTopicConnection();
+			connTopic2=tcf.createTopicConnection();
+			connTopic3=tcf.createTopicConnection();
 			t1=(Topic) context.lookup("topic/WebApp1");
 			t2=(Topic) context.lookup("topic/WebApp2");
 			t3=(Topic) context.lookup("topic/WebApp3");
-			ts1 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			ts2 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			ts3 = connTopic.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-			connTopic.start();
+			ts1 = connTopic1.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			connTopic1.start();
+			connTopic2.start();
+			connTopic3.start();
+			
 		}catch(Exception e){
 			e.printStackTrace();
 		}

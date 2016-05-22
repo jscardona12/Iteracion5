@@ -21,5 +21,6 @@
 	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/jnp-client.jar"/>
 	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/netty.jar"/>
 	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/ojdbc6.jar"/>
+
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
