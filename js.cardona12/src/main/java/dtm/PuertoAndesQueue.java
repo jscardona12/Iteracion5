@@ -162,7 +162,7 @@ public class PuertoAndesQueue
 			context = new InitialContext();
 
 			//inicializa la fabrica de conexiones jms
-			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
+			cf=(ConnectionFactory) context.lookup("java:/ConnectionFactory");
 
 		} catch (NamingException e) {
 			System.out.println("Error");
