@@ -169,7 +169,7 @@ public class PuertoAndesQueue
 	}
 
 	public void subscribe() throws JMSException{
-		inicializarTopic();
+		
 		topicSubs2 = ts2.createSubscriber(t2);
 		topicSubs3 = ts3.createSubscriber(t3);
 		topicPublisher = ts1.createPublisher(t1);
@@ -178,7 +178,7 @@ public class PuertoAndesQueue
 	}
 
 	public void inicializarContexto(){
-		inicializarAmbos();
+		
 		try {
 
 			//inicializa datasource por jndi
