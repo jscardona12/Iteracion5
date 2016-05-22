@@ -107,14 +107,14 @@ public class DAOBarco {
 	 * @throws SQLException - Cualquier error que la base de datos arroje.
 	 * @throws Exception - Cualquier error que no corresponda a la base de datos
 	 */
-	public ArrayList<Barco> buscarBarcoPorName(String name) throws SQLException, Exception {
+	public Barco buscarBarcoPorID(int id) throws SQLException, Exception {
 		
 		boolean ev = true;
 		boolean s = true;
 		
-		ArrayList<Barco> barco = new ArrayList<Barco>();
+		Barco barco = null;
 
-		String sql = "SELECT * FROM BARCOS WHERE NAME ='" + name + "'";
+		String sql = "SELECT * FROM BARCOS WHERE ID =" + id ;
 
 		System.out.println("SQL stmt:" + sql);
 
@@ -125,7 +125,7 @@ public class DAOBarco {
 		while (rs.next()) 
 		{
 			String name2 = rs.getString("NAME");
-			int id = Integer.parseInt(rs.getString("ID"));
+			int id2 = Integer.parseInt(rs.getString("ID"));
 			String pto = rs.getString("PUERTO_ORIGEN");
 			String ptd = rs.getString("PUERTO_DESTINO");
 			int cap = Integer.parseInt(rs.getString("CAPACIDAD"));
@@ -135,7 +135,7 @@ public class DAOBarco {
 			int idc = Integer.parseInt(rs.getString("ID_TIPO_CARGA"));
 			int idr = Integer.parseInt(rs.getString("ID_RESERVA"));
 			int des = Integer.parseInt(rs.getString("DESHABILITADOS"));			
-			barco.add(new Barco(name, pto, ptd, id, cap, na, rc, t, idc,idr,des));
+			barco = new Barco(name2, pto, ptd, id, cap, na, rc, t, idc,idr,des);
 		}
 
 		return barco;
@@ -218,7 +218,90 @@ public class DAOBarco {
 		prepStmt.executeQuery();
 	}
 	
-	
+	public int getDiferenciaCarga(int area, Barco barco) throws SQLException
+	{
+		
+		int verificar =0;
+		String sql1 = "SELECT AREAS_DE_ALMACENAMIENTO.TIPO,AREAS_DE_ALMACENAMIENTO.ESTADO";
+		sql1 += " FROM AREAS_DE_ALMACENAMIENTO"
+				+ " WHERE AREAS_DE_ALMACENAMIENTO.ID ="+ area;
+
+		System.out.println("SQL stmt:" + sql1);
+		PreparedStatement prepStmt1 = conn.prepareStatement(sql1);
+		recursos.add(prepStmt1);
+		ResultSet rs1 = prepStmt1.executeQuery();
+		if(rs1.next())
+		{
+			String tipo = rs1.getString("TIPO");
+			int estado = Integer.parseInt(rs1.getString("ESTADO"));
+			if(estado == 0)
+			{
+				String sql2 = "SELECT " + tipo + "S.";
+				if(tipo.equalsIgnoreCase("SILO"))
+				{
+					sql2 += "CAPACIDAD FROM SILOS"
+							+ " WHERE SILOS.ID = " + area;
+				}
+				else
+				{
+					sql2 += "AREA FROM " + tipo
+							+ "S WHERE " + tipo +"S.ID = " + area;
+				}
+				System.out.println("SQL stmt:" + sql2);
+				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+				recursos.add(prepStmt2);
+				ResultSet rs2 = prepStmt2.executeQuery();
+				if(rs2.next())
+				{
+					String b = "";
+					if(tipo.equalsIgnoreCase("SILO"))
+						b = "CAPACIDAD";
+					else b = "AREA";
+
+					int capacidad = Integer.parseInt(rs2.getString(b));
+
+					String sql3 = "SELECT CARGAS.VOLUMEN, CARGAS.TIPO"
+							+ " FROM CARGAS"
+							+ " WHERE CARGAS.ID = " +barco.getCarga();
+
+					System.out.println("SQL stmt:" + sql3);
+					PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+					recursos.add(prepStmt3);
+					ResultSet rs3 = prepStmt3.executeQuery();
+					if(rs3.next())
+					{
+						System.out.println("A");
+						int volCarga = Integer.parseInt(rs3.getString("VOLUMEN"));
+						String tipoCarga = rs3.getString("TIPO");
+						System.out.println(capacidad+","+ volCarga);
+						System.out.println(tipo);
+
+						if((tipo.equalsIgnoreCase("BODEGA")
+								&& tipoCarga.equalsIgnoreCase("CONTENEDORES"))||
+								(tipo.equalsIgnoreCase("PATIO")
+										&& tipoCarga.equalsIgnoreCase("VEHICULOS"))||
+								(tipo.equalsIgnoreCase("COBERTIZO")
+										&& tipoCarga.equalsIgnoreCase("BIOTIPOS"))||
+								(tipo.equalsIgnoreCase("SILO")
+										&& tipoCarga.equalsIgnoreCase("GRANEL SOLIDO"))
+								&& (capacidad > volCarga)
+								)
+						{
+							System.out.println("B");
+							verificar = volCarga - capacidad;
+						}
+
+					}
+				}
+			}
+		}
+
+
+		return verificar;
+	}
 }
+	
+	
+
 
 

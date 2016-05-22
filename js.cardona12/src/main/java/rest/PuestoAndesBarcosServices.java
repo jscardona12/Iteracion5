@@ -71,21 +71,21 @@ public class PuestoAndesBarcosServices
      * @return Json con el/los videos encontrados con el nombre que entra como parámetro o json con 
      * el error que se produjo
      */
-	@GET
-	@Path("/name/{name}")
-	@Produces({ MediaType.APPLICATION_JSON })
-	public Response getBarcoName(@javax.ws.rs.PathParam("name") String name) {
-		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
-		ArrayList<Barco> barco;
-		try {
-			if (name == null || name.length() == 0)
-				throw new Exception("Nombre del barco no valido");
-			barco = tm.buscarBarcoPorName(name);
-		} catch (Exception e) {
-			return Response.status(500).entity(doErrorMessage(e)).build();
-		}
-		return Response.status(200).entity(barco).build();
-	}
+//	@GET
+//	@Path("/name/{name}")
+//	@Produces({ MediaType.APPLICATION_JSON })
+//	public Response getBarcoName(@javax.ws.rs.PathParam("name") String name) {
+//		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+//		ArrayList<Barco> barco;
+//		try {
+//			if (name == null || name.length() == 0)
+//				throw new Exception("Nombre del barco no valido");
+//			barco = tm.buscarBarcoPorName(name);
+//		} catch (Exception e) {
+//			return Response.status(500).entity(doErrorMessage(e)).build();
+//		}
+//		return Response.status(200).entity(barco).build();
+//	}
 	
     /**
      * Método que expone servicio REST usando PUT que agrega el video que recibe en Json

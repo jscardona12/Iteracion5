@@ -24,6 +24,7 @@ import dao.DAOTablaRegistroBuques;
 import dao.DAOTablaRegistroCargas;
 import dao.DAOTablaRegistroTerminales;
 import dao.DAOTablaUsuarios;
+import dtm.CargaUnificada;
 import dtm.JMSManager;
 import vos.AreaAlmacenamiento;
 import vos.Buque;
@@ -845,8 +846,103 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public void iniciarRF14() throws JMSException {
-		jms.empezarRF14();
+	public void iniciarRF14(RegistroBuque rb) throws Exception {
+		DAOTablaBuques daoBuques = new DAOTablaBuques();
+		DAOTablaUsuarios daoUsuarios = new DAOTablaUsuarios();
+		DAOTablaCargas daoCargas = new DAOTablaCargas();
+		ArrayList<Carga> cargasHuerfanas = new ArrayList<Carga>();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoUsuarios.setConn(conn);
+			Usuario usuario = daoUsuarios.buscarUsuarioPorId(rb.getId_usuario());
+			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
+				throw new Exception("No se tienen los privilegios para realizar esta acci�n.");
+
+			// SE ACTUALIZA EL ESTADO DEL BUQUE.
+			daoBuques.setConn(conn);
+			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
+
+			daoCargas.setConn(conn);
+			ArrayList<Carga> listaCarga = (ArrayList<Carga>) daoCargas.cargasDelBuque(buque.getId());
+
+			// Forza el destino para puerto andes para poder descargar el buque.
+			for (Carga c : listaCarga) {
+				Carga temp = new Carga(c.getId(), c.getTipo(), c.getPeso(), c.getVolumen(), 0, c.getId_camion(), -1,
+						c.getId_cliente(), c.getPuerto_origen(), "Puerto Andes", "CARGADO");
+				daoCargas.updateCarga(temp);
+			}
+
+			RegistroBuque rb1 = new RegistroBuque(2, -1, "", "", "", "", "", "", "Puerto Andes", "", "", 0,
+					buque.getTipo());
+
+			descargarBuque2(rb1);
+
+			// Las cargas cuyo ID DE ALMAC buque sigan estando en null fueron
+			// las que no se pudieron reubicar en areas de almacenamiento.
+			ArrayList<Buque> bDisponibles = new ArrayList<>();
+			if (!listaCarga.isEmpty()) {
+				bDisponibles = (ArrayList<Buque>) daoBuques.getBuquesDisponibles(buque.getTipo(),
+						listaCarga.get(0).getPuerto_destino());
+			}
+			for (Carga c : listaCarga) {
+				Carga temp = daoCargas.buscarCargaPorId(c.getId());
+				temp.setId_buque(-1);
+				daoCargas.updateCarga(temp);
+				if (temp.getId_almacenamiento() == -1) {
+					for (Buque bb : bDisponibles) {
+						if (bb.getId() == buque.getId())
+							continue;
+						if (bb.getCapacidad() > temp.getPeso()) {
+							temp.setId_buque(bb.getId());
+							daoCargas.updateCarga(temp);
+						}
+					}
+					if (temp.getId_buque() == -1)
+						cargasHuerfanas.add(temp);
+				}
+			}
+			if(!cargasHuerfanas.isEmpty()){
+				jms.empezarRF14(estandarizarCargas(cargasHuerfanas));
+			}
+			
+			conn.commit();
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoUsuarios.cerrarRecursos();
+				daoBuques.cerrarRecursos();
+				daoCargas.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
+	public int consultarBono(String rut) throws JMSException{
+		return jms.empezarRF15(rut);
+	}
+	
+	private ArrayList<CargaUnificada> estandarizarCargas(ArrayList<Carga> cargas){
+		ArrayList<CargaUnificada> cargasUnificadas = new ArrayList<>();
+		for(Carga c : cargas){
+			cargasUnificadas.add(new CargaUnificada(c.getPeso(),c.getVolumen(), c.getTipo(), 1000));
+		}
+		return cargasUnificadas;
 	}
 
 	public void cargarBuque(RegistroBuque rb) throws Exception {

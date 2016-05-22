@@ -109,10 +109,10 @@ public class PuertoAndesBuquesServices {
 	@Path("rf14")
 	@Produces({MediaType.APPLICATION_JSON})
 	@Consumes({MediaType.APPLICATION_JSON})
-	public Response rf14(){
+	public Response rf14(RegistroBuque rb){
 		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
 		try {
-			tm.iniciarRF14();
+			tm.iniciarRF14(rb);
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}

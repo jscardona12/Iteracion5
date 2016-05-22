@@ -1,6 +1,7 @@
 package dtm;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -11,6 +12,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -131,7 +133,7 @@ public class PuertoAndesQueue
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
@@ -148,7 +150,7 @@ public class PuertoAndesQueue
 			connTopic1.start();
 			connTopic2.start();
 			connTopic3.start();
-			
+
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -169,7 +171,7 @@ public class PuertoAndesQueue
 	}
 
 	public void subscribe() throws JMSException{
-		
+
 		topicSubs2 = ts2.createSubscriber(t2);
 		topicSubs3 = ts3.createSubscriber(t3);
 		topicPublisher = ts1.createPublisher(t1);
@@ -178,7 +180,7 @@ public class PuertoAndesQueue
 	}
 
 	public void inicializarContexto(){
-		
+
 		try {
 
 			//inicializa datasource por jndi
@@ -279,45 +281,185 @@ public class PuertoAndesQueue
 		String mensaje = "RF14";
 		TextMessage tm = ts2.createTextMessage(mensaje);
 		topicPublisher.publish(tm);
-		
+
 	}
-	
+
 	public void responderRF14(Queue cola){
 		System.out.println("Va a responer rf14");
 	}
 
-	public void responderRF15(Queue cola){
-		System.out.println("Va a responer rf15");		
-	}
-	
-	public class Listener2 implements MessageListener
-	{
-		public void onMessage(Message msg){
-			try{
-				TextMessage t = (TextMessage) msg;
-				String texto = t.getText();
-				if(texto.equals("RF14")){
+
+
+	public class Listener2 implements MessageListener {
+		public void onMessage(Message msg) {
+			try {
+				ObjectMessage obj = (ObjectMessage) msg;
+				Mensaje msj = (Mensaje) obj.getObject();
+				String texto = msj.getMensaje();
+				if (texto.equals("RF14")) {
 					responderRF14(cola2);
-				}else if(texto.equals("RF15")){
-					responderRF15(cola2);
+				} else if (texto.contains("RF15P1")) {
+					responderRF15(cola2, texto.substring(7));
+				} else if (texto.contains("RF15P2")) {
+					terminarRF15(texto.substring(7));
 				}
-			}catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	public class Listener3 implements MessageListener
-	{
-		public void onMessage(Message msg){
-			try{
-				TextMessage t = (TextMessage) msg;
-				String texto = t.getText();
-				if(texto.equals("RF14")){
-					responderRF14(cola3);
+
+	public class Listener3 implements MessageListener {
+		public void onMessage(Message msg) {
+			try {
+				ObjectMessage obj = (ObjectMessage) msg;
+				Mensaje msj = (Mensaje) obj.getObject();
+				String texto = msj.getMensaje();
+				if (texto.equals("RF14")) {
+					responderRF14(cola2);
+				} else if (texto.contains("RF15P1")) {
+					responderRF15(cola2, texto.substring(7));
+				} else if (texto.contains("RF15P2")) {
+					terminarRF15(texto.substring(7));
 				}
-			}catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public int empezarRF15(String rut) throws JMSException {
+		int descuento = 0;
+		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RF15P1 - AN");
+		topicPublisher.publish(msg);
+		System.out.println("publico RF15P1 - AN");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+			int numClientes = 0;
+
+			System.out.println("Esperando 1 mensaje RF15 - AN...");
+			Message msn = consumer.receive();
+			TextMessage txt = (TextMessage) msn;
+			String respuesta1 = txt.getText();
+			if (respuesta1.contains("SI"))
+				numClientes++;
+
+			System.out.println("Esperando 2 mensaje RF15 - AN...");
+			Message msn2 = consumer.receive();
+			TextMessage txt2 = (TextMessage) msn2;
+			String respuesta2 = txt2.getText();
+			if (respuesta2.contains("SI"))
+				numClientes++;
+
+			System.out.println("El exportador existe en " + numClientes + " bd - AN");
+
+			switch (numClientes) {
+			case 2:
+				descuento = 3;
+				break;
+			case 3:
+				descuento = 5;
+				break;
+			}
+
+			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
+			Statement st = conn1.createStatement();
+			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
+			System.out.println(sql);
+
+			int num = st.executeUpdate(sql);
+			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206");
+			// Si se envio de forma correcta el mensaje y se realizaron los
+			// cambios
+			// se hace commit
+			utx.commit();
+			cerrarConexion();
+
+		} catch (Exception e) {
+
+		}
+		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
+		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
+		System.out.println("va a publicar RF15P2 - AN");
+		topicPublisher.publish(msgFinal);
+		System.out.println("publico RF15P2 - AN");
+		return descuento;
+	}
+
+	public void terminarRF15(String rutDescuento) throws JMSException {
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			String[] data = rutDescuento.split(" ");
+
+			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
+			Statement st = conn1.createStatement();
+			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + data[1] + " WHERE RUT = " + data[0];
+			System.out.println(sql);
+			// *******************************************************
+
+			int num = st.executeUpdate(sql);
+			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - AN");
+
+			utx.commit();
+			cerrarConexion();
+		} catch (Exception e) {
+		}
+	}
+
+	public void responderRF15(Queue cola, String rut) {
+		System.out.println("Va a responer rf15 - AN");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR PARAMETRO
+			Statement st = conn1.createStatement();
+			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+			System.out.println(sql + " - AN");
+			ResultSet rs = st.executeQuery(sql);
+			boolean existe = rs.next();
+			st.close();
+			// **********************************************************************
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(cola);
+
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			TextMessage msg = session.createTextMessage();
+			String peticion = existe ? "SI" : "NO";
+			msg.setText(peticion);
+			producer.send(msg);
+			System.out.println("Se envio " + peticion + " - AN");
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+
 		}
 	}
 }

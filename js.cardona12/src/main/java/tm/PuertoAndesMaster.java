@@ -153,15 +153,15 @@ public class PuertoAndesMaster {
 	 * @return ListaVideos - objeto que modela  un arreglo de videos. este arreglo contiene el resultado de la búsqueda
 	 * @throws Exception -  cualquier error que se genere durante la transacción
 	 */
-	public ArrayList<Barco> buscarBarcoPorName(String name) throws Exception {
-		ArrayList<Barco> barcos;
+	public Barco buscarBarcoPorName(int name) throws Exception {
+		Barco barcos;
 		DAOBarco daoBarcos = new DAOBarco();
 		try 
 		{
 			//////Transacción
 			this.conn = darConexion();
 			daoBarcos.setConn(conn);
-			barcos = daoBarcos.buscarBarcoPorName(name);
+			barcos = daoBarcos.buscarBarcoPorID(name);
 
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
