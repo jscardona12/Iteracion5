@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+import javax.jms.JMSException;
+
 import dao.DAOTablaAreasAlmacenamiento;
 import dao.DAOTablaBuques;
 import dao.DAOTablaCargas;
@@ -22,7 +24,7 @@ import dao.DAOTablaRegistroBuques;
 import dao.DAOTablaRegistroCargas;
 import dao.DAOTablaRegistroTerminales;
 import dao.DAOTablaUsuarios;
-import dtm.PuertoAndesQueue;
+import dtm.JMSManager;
 import vos.AreaAlmacenamiento;
 import vos.Buque;
 import vos.Carga;
@@ -84,6 +86,8 @@ public class PuertoAndesMaster {
 	private Connection conn;
 
 	private static int auxId;
+	
+	private JMSManager jms;
 
 	/**
 	 * Método constructor de la clase VideoAndesMaster, esta clase modela y
@@ -100,8 +104,8 @@ public class PuertoAndesMaster {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();
 		
-		PuertoAndesQueue paq = new PuertoAndesQueue();
-		paq.inicializarContexto();
+		jms = new JMSManager();
+		jms.inicializarContexto();
 		System.out.println("Funciona");
 	}
 
@@ -838,6 +842,15 @@ public class PuertoAndesMaster {
 				exception.printStackTrace();
 				throw exception;
 			}
+		}
+	}
+	
+	public void iniciarRF14() {
+		try {
+			jms.empezarRF14();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
