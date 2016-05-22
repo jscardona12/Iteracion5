@@ -13,7 +13,9 @@
 package dtm;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -23,6 +25,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -35,6 +38,11 @@ import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.transaction.UserTransaction;
+
+import dao.DAOTablaAlmacenamiento;
+import dao.DAOTablaCargaEnAlmacen;
+import tm.VideoAndesMaster;
+import vos.ListaMovimientoAlmacen;
 
 /**
  * A simple JMS Queue example that creates a producer and consumer on a queue and sends then receives a message.
@@ -59,7 +67,7 @@ public class JMSManager
 	 * Fabrica de conexiones para el envio de mensajes a la cola
 	 */
 	private ConnectionFactory cf;
-	
+
 	/**
 	 * Fabrica de conexiones para topics
 	 */
@@ -130,8 +138,9 @@ public class JMSManager
 	 * yo
 	 */
 	private TopicPublisher topicPublisher;
-
-	public JMSManager(){
+	private VideoAndesMaster videoMaster;
+	public JMSManager(VideoAndesMaster videoMaster){
+		this.videoMaster=videoMaster;
 		inicializarTopic();
 		try {
 			subscribe();
@@ -140,7 +149,7 @@ public class JMSManager
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
@@ -174,7 +183,7 @@ public class JMSManager
 	}
 
 	public void subscribe() throws JMSException{
-		
+
 		topicSubs1 = ts1.createSubscriber(t1);
 		topicSubs3 = ts3.createSubscriber(t3);
 		topicPublisher = ts2.createPublisher(t2);
@@ -183,7 +192,7 @@ public class JMSManager
 	}
 
 	public void inicializarContexto(){
-		
+
 		try {
 
 			//inicializa datasource por jndi
@@ -280,30 +289,77 @@ public class JMSManager
 		}
 	}
 
-	public void empezarRF14() throws JMSException{
-		String mensaje = "RF14";
-		TextMessage tm = ts2.createTextMessage(mensaje);
+	public void empezarRF14(ArrayList<CargaUnificada> cargas) throws JMSException{
+		MensajeCargas mensaje = new MensajeCargas(2, "RF14", cargas);
+		ObjectMessage tm = ts2.createObjectMessage(mensaje);
 		topicPublisher.publish(tm);
 		System.out.println("bien");
-		
+
 	}
-	
-	public void responderRF14(Queue cola){
+
+	public void responderRF14(Queue cola, String tipo){
 		System.out.println("Va a responer rf14");
+		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
+		int libre;
+		try {
+			libre = videoMaster.getAlmacenamientoLibre(tipo);
+
+			//fin transaccion propia
+			try{
+				UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+				inicializarContexto();
+				utx.begin();
+
+				//Inicia sesion utilizando la conexion
+				Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+				//Crea una sesion para producir mensajes hacia la cola destino
+				MessageProducer producer = session.createProducer(cola);
+				ObjectMessage message = session.createObjectMessage( new Mensaje(2, libre+"") );
+				producer.send(message);
+				System.out.println("PuertoAndes 0206 - Se envi�: "+libre);
+
+				//Crea una sesion para recibir mensajes
+				MessageConsumer consumer = session.createConsumer(miCola);
+				conm.start();
+
+				//Recibimos un mensaje
+				System.out.println("PuertoAndes0206 - Esperando mensaje...");
+				Message msn = consumer.receive();
+				ObjectMessage txt = (ObjectMessage)msn;
+				MensajeCargas porInsertar = (MensajeCargas)txt.getObject();
+				System.out.println("PuertoAndes0206 - Recibido..."+porInsertar.getMensaje());
+
+				//TRANSACCION PROPIA: insertar cargas en bd
+				videoMaster.insertarCargas(porInsertar.getCargas());
+
+
+				utx.commit();
+				cerrarConexion();
+
+			}catch(Exception e){
+
+			}
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 	}
+
+
 
 	public void responderRF15(Queue cola){
 		System.out.println("Va a responer rf15");		
 	}
-	
+
 	public class Listener1 implements MessageListener
 	{
 		public void onMessage(Message msg){
 			try{
-				TextMessage t = (TextMessage) msg;
-				String texto = t.getText();
-				if(texto.equals("RF14")){
-					responderRF14(cola1);
+				ObjectMessage t = (ObjectMessage) msg;
+				Mensaje m = (Mensaje) t.getObject();
+				String texto = m.getMensaje();
+				if(texto.startsWith("RF14")){
+					responderRF14(cola1, texto.split("-")[1]);
 				}else if(texto.equals("RF15")){
 					responderRF15(cola1);
 				}
@@ -316,10 +372,11 @@ public class JMSManager
 	{
 		public void onMessage(Message msg){
 			try{
-				TextMessage t = (TextMessage) msg;
-				String texto = t.getText();
-				if(texto.equals("RF14")){
-					responderRF14(cola3);
+				ObjectMessage t = (ObjectMessage) msg;
+				Mensaje m = (Mensaje) t.getObject();
+				String texto = m.getMensaje();
+				if(texto.startsWith("RF14")){
+					responderRF14(cola3,texto.split("-")[1]);
 				}
 			}catch(Exception e){
 				e.printStackTrace();
