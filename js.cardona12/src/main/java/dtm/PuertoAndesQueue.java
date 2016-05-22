@@ -180,6 +180,7 @@ public class PuertoAndesQueue
 			cola2 = (Queue) context.lookup("queue/WebApp2");
 			cola3 = (Queue) context.lookup("queue/WebApp3");
 			conm = cf.createConnection();
+			subscribe();
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
