@@ -161,16 +161,15 @@ public class PuertoAndesQueue
 	}
 
 	public void subscribe() throws JMSException{
-		inicializarTopic();
-		topicSubs2 = ts2.createSubscriber(t2);
-		topicSubs3 = ts3.createSubscriber(t3);
+		topicSubs2 = ts1.createSubscriber(t2);
+		topicSubs3 = ts1.createSubscriber(t3);
 		topicPublisher = ts1.createPublisher(t1);
 		topicSubs2.setMessageListener(new Listener2());
 		topicSubs3.setMessageListener(new Listener3());
 	}
 
 	public void inicializarContexto(){
-		inicializarAmbos();
+		
 		try {
 
 			//inicializa datasource por jndi
