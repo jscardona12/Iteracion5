@@ -137,6 +137,7 @@ public class PuertoAndesQueue
 			ts1 = connTopic1.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			subscribe();
 			connTopic1.start();
 			connTopic2.start();
 			connTopic3.start();
@@ -179,7 +180,6 @@ public class PuertoAndesQueue
 			cola2 = (Queue) context.lookup("queue/WebApp2");
 			cola3 = (Queue) context.lookup("queue/WebApp3");
 			conm = cf.createConnection();
-			subscribe();
 			System.out.println("Contexto inicializado");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
