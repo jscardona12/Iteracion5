@@ -59,6 +59,11 @@ public class JMSManager
 	 * Fabrica de conexiones para el envio de mensajes a la cola
 	 */
 	private ConnectionFactory cf;
+	
+	/**
+	 * Fabrica de conexiones para topics
+	 */
+	private TopicConnectionFactory tcf;
 
 	/**
 	 * Conexion a la cola de mensajes
@@ -139,7 +144,7 @@ public class JMSManager
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
-			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
+			tcf = (TopicConnectionFactory) context.lookup("java:/ConnectionFactory");
 			connTopic1=tcf.createTopicConnection();
 			connTopic2=tcf.createTopicConnection();
 			connTopic3=tcf.createTopicConnection();
@@ -162,7 +167,6 @@ public class JMSManager
 
 			//inicializa la fabrica de conexiones jms
 			cf=(ConnectionFactory) context.lookup("java:/JmsXA");
-
 		} catch (NamingException e) {
 			System.out.println("Error");
 		}
@@ -171,11 +175,17 @@ public class JMSManager
 
 	public void subscribe() throws JMSException{
 		inicializarTopic();
+		System.out.println("inicializa bien");
 		topicSubs1 = ts1.createSubscriber(t1);
+		System.out.println("crea topicsubs1 bien");
 		topicSubs3 = ts3.createSubscriber(t3);
+		System.out.println("crea topicsubs3 bien");
 		topicPublisher = ts2.createPublisher(t2);
+		System.out.println("crea publisher bien");
 		topicSubs1.setMessageListener(new Listener1());
+		System.out.println("agrega listener1 bien");
 		topicSubs3.setMessageListener(new Listener3());
+		System.out.println("agrega listener3 bien");
 	}
 
 	public void inicializarContexto(){
@@ -280,6 +290,7 @@ public class JMSManager
 		String mensaje = "RF14";
 		TextMessage tm = ts2.createTextMessage(mensaje);
 		topicPublisher.publish(tm);
+		System.out.println("bien");
 		
 	}
 	

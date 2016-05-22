@@ -52,6 +52,10 @@ public class PuertoAndesQueue
 	 * Fabrica de conexiones para el envio de mensajes a la cola
 	 */
 	private ConnectionFactory cf;
+	/**
+	 * Fabrica de conexiones para el envio de mensajes al topic
+	 */
+	private TopicConnectionFactory tcf;
 
 	/**
 	 * Conexion a la cola de mensajes
@@ -119,10 +123,20 @@ public class PuertoAndesQueue
 	 */
 	private TopicPublisher topicPublisher;
 
+	public PuertoAndesQueue(){
+		inicializarTopic();
+		try {
+			subscribe();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void inicializarTopic(){
 		inicializarAmbos();
 		try{
-			TopicConnectionFactory tcf = (TopicConnectionFactory) cf;
+			tcf = (TopicConnectionFactory) context.lookup("java:/ConnectionFactory");
 			connTopic1=tcf.createTopicConnection();
 			connTopic2=tcf.createTopicConnection();
 			connTopic3=tcf.createTopicConnection();
