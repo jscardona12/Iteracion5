@@ -106,13 +106,6 @@ public class PuertoAndesMaster {
 		
 		jms = new JMSManager();
 		jms.inicializarContexto();
-		try {
-			jms.subscribe();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("Error al subscribir");
-		}
 		System.out.println("Funciona");
 	}
 

@@ -143,6 +143,7 @@ public class JMSManager
 			ts1 = connTopic1.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			subscribe();
 			connTopic1.start();
 			connTopic2.start();
 			connTopic3.start();
@@ -166,8 +167,8 @@ public class JMSManager
 	}
 
 	public void subscribe() throws JMSException{
-		topicSubs1 = ts1.createSubscriber(t3);
-		topicSubs2 = ts2.createSubscriber(t3);
+		topicSubs1 = ts3.createSubscriber(t1);
+		topicSubs2 = ts3.createSubscriber(t2);
 		topicPublisher = ts3.createPublisher(t3);
 		topicSubs1.setMessageListener(new Listener1());
 		topicSubs2.setMessageListener(new Listener2());
