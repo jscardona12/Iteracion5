@@ -7,12 +7,15 @@
 	<classpathentry kind="src" path="java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/hornetq-jms-client.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/Iteracion5/js.cardona12/lib/jackson-all-1.7.5.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/javax.servlet.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/hornetq-core-client.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/javax.ws.rs.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/jnp-client.jar"/>
-	<classpathentry kind="lib" path="/Users/Juanjo/Documents/iteracion2/VideoAndes/WebContent/WEB-INF/lib/netty.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/hornetq-core-client.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/hornetq-jms-client.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/jackson-all-1.7.5.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/javax.servlet.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/javax.ws.rs.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/jboss-jms-api.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/jnp-client.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/netty.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/VideoAndes/WebContent/WEB-INF/lib/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/javax.transaction.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

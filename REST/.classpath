@@ -11,5 +11,6 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/JoseDaniel/Documents/Universidad/4toSemestre/Sistrans/iteracion5/Iteracion5/javax.transaction.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
