@@ -299,9 +299,9 @@ public class DAOBarco {
 
 		return verificar;
 	}
-	}
-	
-	
 }
+	
+	
+
 
 
