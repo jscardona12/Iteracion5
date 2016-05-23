@@ -27,9 +27,12 @@ import dao.DAOTablaUsuarios;
 import dtm.CargaUnificada;
 import dtm.JMSManager;
 import vos.AreaAlmacenamiento;
+import vos.AreaUnificada;
 import vos.Buque;
 import vos.Carga;
+import vos.ConsultaAreas;
 import vos.Factura;
+import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
 import vos.ListaConsultaBuques;
 import vos.ListaExportadorCompleto;
@@ -105,7 +108,7 @@ public class PuertoAndesMaster {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();
 		
-		jms = new JMSManager();
+		jms = new JMSManager(this);
 		jms.inicializarContexto();
 		System.out.println("Funciona");
 	}
@@ -933,7 +936,18 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public int consultarBono(String rut) throws JMSException{
+	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception{
+		ListaConsultaAreas lsa = consultarAreas(idUsuario, pb);
+		ArrayList<AreaUnificada> cu = new ArrayList<>();
+		for(ConsultaAreas ca : lsa.getAreas()){
+			cu.add(new AreaUnificada(ca.getEstado_area(), ca.getTipo_area()));
+		}
+		cu.addAll(jms.empezarRFC11().getAreas());
+		
+		return new ListaAreaUnificada(cu);
+	}
+	
+	public int consultarBono(String rut) throws Exception{
 		return jms.empezarRF15(rut);
 	}
 	

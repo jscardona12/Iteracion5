@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -38,6 +39,12 @@ import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.transaction.UserTransaction;
+
+import tm.PuertoAndesMaster;
+import vos.ConsultaAreas;
+import vos.ListaAreaUnificada;
+import vos.ListaConsultaAreas;
+import vos.ParametroBusqueda;
 
 /**
  * A simple JMS Queue example that creates a producer and consumer on a queue
@@ -129,7 +136,10 @@ public class JMSManager {
 	 */
 	private TopicPublisher topicPublisher;
 
-	public JMSManager() {
+	private PuertoAndesMaster master;
+
+	public JMSManager(PuertoAndesMaster master) {
+		this.master = master;
 		inicializarTopic();
 	}
 
@@ -311,6 +321,8 @@ public class JMSManager {
 					responderRF15(cola1, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));
+				} else if (texto.contains("RFC11")) {
+					responderRFC11(cola1);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -330,6 +342,8 @@ public class JMSManager {
 					responderRF15(cola2, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));
+				} else if (texto.contains("RFC11")) {
+					responderRFC11(cola2);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -337,7 +351,7 @@ public class JMSManager {
 		}
 	}
 
-	public int empezarRF15(String rut) throws JMSException {
+	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
@@ -400,7 +414,7 @@ public class JMSManager {
 			cerrarConexion();
 
 		} catch (Exception e) {
-
+			throw e;
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
@@ -417,7 +431,7 @@ public class JMSManager {
 			utx.begin();
 
 			String[] data = rutDescuento.split(" ");
-			
+
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
 			Statement st = conn1.createStatement();
 			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + data[1] + " WHERE RUT = " + data[0];
@@ -440,7 +454,8 @@ public class JMSManager {
 			inicializarContexto();
 			utx.begin();
 
-			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR PARAMETRO
+			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR
+			// PARAMETRO
 			Statement st = conn1.createStatement();
 			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
 			System.out.println(sql + " - AN");
@@ -472,4 +487,92 @@ public class JMSManager {
 		}
 	}
 
+	public ListaAreaUnificada empezarRFC11() throws Exception {
+		ArrayList<vos.AreaUnificada> unif = new ArrayList<>();
+		Mensaje msj = new Mensaje(3, "RFC11");
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RFC11 - AN");
+		topicPublisher.publish(msg);
+		System.out.println("publico RFC11 - AN ");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+
+			System.out.println("Esperando 1 mensaje RFC11 - AN...");
+			Message msn = consumer.receive();
+			ObjectMessage txt = (ObjectMessage) msn;
+			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
+
+
+			System.out.println("Esperando 2 mensaje RFC11 - AN...");
+			Message msn2 = consumer.receive();
+			ObjectMessage txt2 = (ObjectMessage) msn2;
+			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
+			cerrarConexion();
+			
+			for(AreaUnificada au : respuesta1.getAreas()){
+				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+			}
+			
+			for(AreaUnificada au : respuesta2.getAreas()){
+				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+			}
+
+		} catch (Exception e) {
+			throw e;
+		}
+		return new ListaAreaUnificada(unif);
+	}
+
+	public void responderRFC11(Queue cola) throws Exception {
+		// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+		// IMPLEMENTADO DE RFC6 Y CONVIERTEN LAS
+		// AREAS A LAS AREAS ESTANDAR.
+		ListaConsultaAreas lista = master.consultarAreas(1,
+				new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
+		List<ConsultaAreas> areas = lista.getAreas();
+		ArrayList<AreaUnificada> areasUnificadas = new ArrayList<>();
+		for (ConsultaAreas a : areas) {
+			areasUnificadas.add(new AreaUnificada(a.getEstado_area(), a.getTipo_area()));
+		}
+		MensajeAreas msj = new MensajeAreas(3, "RFC11", areasUnificadas);
+
+		System.out.println("Va a responer RFC11 - AN");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(cola);
+
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			ObjectMessage msg = session.createObjectMessage(msj);
+			producer.send(msg);
+			System.out.println("Se puso en la cola de RFC11 - AN");
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+
+		}
+	}
 }
