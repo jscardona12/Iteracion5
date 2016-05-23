@@ -543,17 +543,12 @@ public class PuertoAndesQueue
 	public void responderRF15(Queue cola, String rut) {
 		System.out.println("Va a responer rf15 - JS");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
-			inicializarContexto();
-			utx.begin();
+			
 
 			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR PARAMETRO
-			Statement st = conn1.createStatement();
-			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
-			System.out.println(sql + " - JS");
-			ResultSet rs = st.executeQuery(sql);
-			boolean existe = rs.next();
-			st.close();
+			
+			boolean existe = master.buscarExportador(rut);
+		
 			// **********************************************************************
 
 			// Inicia sesion utilizando la conexion

@@ -61,5 +61,16 @@ public class DAOTablaExportadores {
 		recursos.add(prepStmt);
 		prepStmt.executeUpdate();
 	}
+
+	public boolean buscarExportador(String rut) throws SQLException {
+		String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+		System.out.println(sql + " - JS");
+		PreparedStatement prepStmt3 = conn.prepareStatement(sql);
+		recursos.add(prepStmt3);
+		ResultSet rs3 = prepStmt3.executeQuery();
+		
+		return rs3.next();
+		
+	}
 	
 }
