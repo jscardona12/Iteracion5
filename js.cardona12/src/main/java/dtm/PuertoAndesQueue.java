@@ -460,17 +460,15 @@ public class PuertoAndesQueue
 		}
 	}
 
-	public int empezarRF15(String rut) throws JMSException {
+	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
-		System.out.println("va a publicar RF15P1 - JS");
+		System.out.println("va a publicar RF15P1 - JS " + rut);
 		topicPublisher.publish(msg);
-		System.out.println("publico RF15P1 - JS");
+		System.out.println("publico RF15P1 - JS " + rut);
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -498,7 +496,7 @@ public class PuertoAndesQueue
 			if (respuesta2.contains("SI"))
 				numClientes++;
 
-			System.out.println("El exportador existe en " + numClientes + " bd - JS");
+			System.out.println("El exportador existe en " + numClientes + " bd - AN");
 
 			switch (numClientes) {
 			case 2:
@@ -510,24 +508,17 @@ public class PuertoAndesQueue
 			}
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			Statement st = conn1.createStatement();
-			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
-			System.out.println(sql);
+			
+			master.actualizarExportador(rut, descuento);
 
-			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206");
-			// Si se envio de forma correcta el mensaje y se realizaron los
-			// cambios
-			// se hace commit
-			utx.commit();
 			cerrarConexion();
 
 		} catch (Exception e) {
-
+			throw e;
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
-		System.out.println("va a publicar RF15P2 - JS");
+		System.out.println("va a publicar RF15P2 - JS " + rut + " descuento: " + descuento);
 		topicPublisher.publish(msgFinal);
 		System.out.println("publico RF15P2 - JS");
 		return descuento;
@@ -535,26 +526,19 @@ public class PuertoAndesQueue
 
 	public void terminarRF15(String rutDescuento) throws JMSException {
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			String[] data = rutDescuento.split(" ");
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			Statement st = conn1.createStatement();
-			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + data[1] + " WHERE RUT = " + data[0];
-			System.out.println(sql);
+			master.actualizarExportador(data[0], Integer.parseInt(data[1]));
 			// *******************************************************
 
-			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - JS");
-
-			utx.commit();
 			cerrarConexion();
 		} catch (Exception e) {
 		}
 	}
+
 
 	public void responderRF15(Queue cola, String rut) {
 		System.out.println("Va a responer rf15 - JS");
