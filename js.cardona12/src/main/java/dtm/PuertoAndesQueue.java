@@ -133,7 +133,8 @@ public class PuertoAndesQueue
 	
 	private PuertoAndesMaster master;
 
-	public PuertoAndesQueue(){
+	public PuertoAndesQueue(PuertoAndesMaster master){
+		this.master = master;
 		inicializarTopic();
 		try {
 			subscribe();

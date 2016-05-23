@@ -69,7 +69,7 @@ public class PuertoAndesMaster {
 	 */
 	public PuertoAndesMaster(String contextPathP) {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
-		jms = new PuertoAndesQueue();
+		jms = new PuertoAndesQueue(this);
 		jms.inicializarContexto();
 		initConnectionData();
 	}
