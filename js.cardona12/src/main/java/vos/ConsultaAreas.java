@@ -123,6 +123,12 @@ public class ConsultaAreas
 		return estado;
 	}
 
+	public String getSEstado()
+	{
+		Integer a = estado;
+		String b = a.toString();
+		return b;
+	}
 	public void setEstado(int estado) {
 		this.estado = estado;
 	}

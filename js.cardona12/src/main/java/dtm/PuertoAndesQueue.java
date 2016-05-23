@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -29,6 +30,11 @@ import javax.transaction.UserTransaction;
 
 import dtm.PuertoAndesQueue.Listener2;
 import dtm.PuertoAndesQueue.Listener3;
+import tm.PuertoAndesMaster;
+import vos.ConsultaAreas;
+import vos.ListaAreaUnificada;
+import vos.ListaConsultaAreas;
+import vos.ParametroBusqueda;
 
 /**
  * A simple JMS Queue example that creates a producer and consumer on a queue and sends then receives a message.
@@ -124,6 +130,8 @@ public class PuertoAndesQueue
 	 * yo
 	 */
 	private TopicPublisher topicPublisher;
+	
+	private PuertoAndesMaster master;
 
 	public PuertoAndesQueue(){
 		inicializarTopic();
@@ -319,7 +327,7 @@ public class PuertoAndesQueue
 			}else{
 				capacidad3=Integer.parseInt(mensaje.getMensaje());
 			}
-			
+
 			ArrayList<CargaUnificada> cargasPara1=new ArrayList<CargaUnificada>();
 			ArrayList<CargaUnificada> cargasPara3=new ArrayList<CargaUnificada>();
 			boolean sePuede=true;
@@ -348,7 +356,7 @@ public class PuertoAndesQueue
 				message = session.createObjectMessage( new MensajeCargas(1, "CANCEL", cargasPara3) );
 				producer.send(message);
 			}
-			
+
 			utx.commit();
 			cerrarConexion();
 
@@ -356,13 +364,13 @@ public class PuertoAndesQueue
 
 		}
 	}
-	
+
 	public void responderRF14(Queue cola, String tipo){
 		System.out.println("Va a responer rf14");
 		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
 		int libre;
 		try {
-//			libre = videoMaster.getAlmacenamientoLibre(tipo);
+			//			libre = videoMaster.getAlmacenamientoLibre(tipo);
 
 			//fin transaccion propia
 			try{
@@ -392,7 +400,7 @@ public class PuertoAndesQueue
 
 				//TRANSACCION PROPIA: insertar cargas en bd
 				if(!porInsertar.getMensaje().equals("CANCEL")){
-					
+
 				}
 
 
@@ -421,6 +429,9 @@ public class PuertoAndesQueue
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));
 				}
+				else if (texto.contains("RFC11")) {
+					responderRFC11(cola2);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -439,6 +450,9 @@ public class PuertoAndesQueue
 					responderRF15(cola3, texto.substring(7)); 
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));
+				}
+				else if (texto.contains("RFC11")) {
+					responderRFC11(cola3);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -573,6 +587,92 @@ public class PuertoAndesQueue
 			msg.setText(peticion);
 			producer.send(msg);
 			System.out.println("Se envio " + peticion + " - JS");
+
+			cerrarConexion();
+
+		} catch (Exception e) {}
+
+	}
+	public ListaAreaUnificada empezarRFC11() throws Exception {
+		ArrayList<vos.AreaUnificada> unif = new ArrayList<>();
+		Mensaje msj = new Mensaje(3, "RFC11");
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RFC11 - JS");
+		topicPublisher.publish(msg);
+		System.out.println("publico RFC11 - JS ");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+
+			System.out.println("Esperando 1 mensaje RFC11 - JS...");
+			Message msn = consumer.receive();
+			ObjectMessage txt = (ObjectMessage) msn;
+			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
+
+
+			System.out.println("Esperando 2 mensaje RFC11 - JS...");
+			Message msn2 = consumer.receive();
+			ObjectMessage txt2 = (ObjectMessage) msn2;
+			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
+			cerrarConexion();
+
+			for(AreaUnificada au : respuesta1.getAreas()){
+				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+			}
+
+			for(AreaUnificada au : respuesta2.getAreas()){
+				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+			}
+
+		} catch (Exception e) {
+			throw e;
+		}
+		return new ListaAreaUnificada(unif);
+	}
+
+	public void responderRFC11(Queue cola) throws Exception {
+		// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+		// IMPLEMENTADO DE RFC6 Y CONVIERTEN LAS
+		// AREAS A LAS AREAS ESTANDAR.
+		
+		List<ConsultaAreas> areas = master.darMovimientosArea(-1);
+		ArrayList<AreaUnificada> areasUnificadas = new ArrayList<>();
+		for (ConsultaAreas a : areas) {
+			areasUnificadas.add(new AreaUnificada(a.getSEstado(), a.getTipo()));
+		}
+		MensajeAreas msj = new MensajeAreas(3, "RFC11", areasUnificadas);
+
+		System.out.println("Va a responer RFC11 - JS");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(cola);
+
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			ObjectMessage msg = session.createObjectMessage(msj);
+			producer.send(msg);
+			System.out.println("Se puso en la cola de RFC11 - JS");
 
 			cerrarConexion();
 
