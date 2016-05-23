@@ -16,6 +16,7 @@ import tm.PuertoAndesMaster;
 import vos.AreaAlmacenamiento;
 import vos.Buque;
 import vos.Carga;
+import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
 import vos.ListaMovimientoCargas;
 import vos.ListaRegistroBuques;
@@ -67,11 +68,26 @@ public class PuertoAndesAlmacenamientoServices {
 	@Path("/consultar_areas/{idUsuario}")
 	@Produces({ MediaType.APPLICATION_JSON })
 	@Consumes({MediaType.APPLICATION_JSON})
-	public Response consultarIOBuques(@javax.ws.rs.PathParam("idUsuario") int idUsuario,ParametroBusqueda pb) {
+	public Response consultarAreas(@javax.ws.rs.PathParam("idUsuario") int idUsuario,ParametroBusqueda pb) {
 		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
 		ListaConsultaAreas lca;
 		try {
 			lca = tm.consultarAreas(idUsuario,pb);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lca).build();
+	}
+	
+	@POST
+	@Path("/consultar_distr/{idUsuario}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarAreaDistr(@javax.ws.rs.PathParam("idUsuario") int idUsuario,ParametroBusqueda pb) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		ListaAreaUnificada lca;
+		try {
+			lca = tm.rfc11(idUsuario,pb);
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}
