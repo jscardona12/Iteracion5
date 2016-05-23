@@ -164,6 +164,8 @@ public class JMSManager
 			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			connTopic1.start();
+			connTopic2.start();
+			connTopic3.start();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
