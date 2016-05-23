@@ -46,6 +46,7 @@ import dao.DAOTablaCargaEnAlmacen;
 import tm.VideoAndesMaster;
 import vos.Almacenamiento;
 import vos.Bodega;
+import vos.Carga;
 import vos.Cobertizo;
 import vos.ListaAlmacenamientos;
 import vos.ListaMovimientoAlmacen;
@@ -319,12 +320,19 @@ public class JMSManager
 		}
 	}
 
-	public void empezarRF14(ArrayList<CargaUnificada> cargas) throws JMSException{
-		MensajeCargas mensaje = new MensajeCargas(2, "RF14", cargas);
+	public void empezarRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB) throws Exception{
+		if(cargas.size()==0)throw new Exception("no hay cargas");
+		double suma=0;
+		for(CargaUnificada c:cargas){
+			suma+=c.getVolumen();
+		}
+		System.out.println("suma:"+suma);
+		System.out.println("cargas mias:"+cargaMia.size());
+		MensajeCargas mensaje = new MensajeCargas(2, "RF14-"+cargas.get(0).getTipo(), cargas);
 		ObjectMessage tm = ts2.createObjectMessage(mensaje);
 		topicPublisher.publish(tm);
 		System.out.println("bien");
-		recibirRF14(cargas);
+		recibirRF14(cargas, cargaMia, idB);
 
 	}
 	
@@ -392,11 +400,10 @@ public class JMSManager
 		return descuento;
 	}
 
-	public void recibirRF14(ArrayList<CargaUnificada> cargas){
+	public void recibirRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB){
 		try{
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			System.out.println("se prepara para recibir respuestas");
 			inicializarContexto();
-			utx.begin();
 
 			//Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -416,14 +423,16 @@ public class JMSManager
 			}else{
 				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
+			System.out.println("recibe primera capacidad "+capacidad1+" - "+capacidad3);
 			msn = consumer.receive();
 			txt = (ObjectMessage)msn;
 			mensaje= (Mensaje)txt.getObject();
 			if(mensaje.getNumPuerto()==1){
-				capacidad1=Integer.parseInt(mensaje.getMensaje());
+				capacidad1=Double.parseDouble(mensaje.getMensaje());
 			}else{
-				capacidad3=Integer.parseInt(mensaje.getMensaje());
+				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
+			System.out.println("recibe segunda capacidad "+capacidad1+" - "+capacidad3);
 			
 			ArrayList<CargaUnificada> cargasPara1=new ArrayList<>();
 			ArrayList<CargaUnificada> cargasPara3=new ArrayList<>();
@@ -431,8 +440,10 @@ public class JMSManager
 			for(CargaUnificada c:cargas){
 				double espacio = c.getVolumen();
 				if(capacidad1-espacio>=0){
+					capacidad1-=espacio;
 					cargasPara1.add(c);
 				}else if(capacidad3-espacio>=0){
+					capacidad3-=espacio;
 					cargasPara3.add(c);
 				}else{
 					sePuede=false;
@@ -441,24 +452,30 @@ public class JMSManager
 			if(!sePuede){
 				MessageProducer producer = session.createProducer(cola1);
 				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+
+				System.out.println("va a mandar objeto CANCEL");
 				producer.send(message);
 				producer = session.createProducer(cola3);
 				message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+
+				System.out.println("va a mandar objeto CANCEL");
 				producer.send(message);
 			}else{
 				MessageProducer producer = session.createProducer(cola1);
-				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", cargasPara1) );
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "OK", cargasPara1) );
+
+				System.out.println("va a mandar objeto ok");
 				producer.send(message);
 				producer = session.createProducer(cola3);
-				message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", cargasPara3) );
+				message = session.createObjectMessage( new MensajeCargas(2, "OK", cargasPara3) );
+
+				System.out.println("va a mandar objeto ok");
 				producer.send(message);
+				videoMaster.terminarRF14(cargaMia, idB);
 			}
-			
-			utx.commit();
-			cerrarConexion();
 
 		}catch(Exception e){
-
+			e.printStackTrace();
 		}
 	}
 	
@@ -471,9 +488,7 @@ public class JMSManager
 
 			//fin transaccion propia
 			try{
-				UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 				inicializarContexto();
-				utx.begin();
 
 				//Inicia sesion utilizando la conexion
 				Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -500,8 +515,6 @@ public class JMSManager
 					videoMaster.insertarCargas(porInsertar.getCargas());
 				}
 
-
-				utx.commit();
 				cerrarConexion();
 
 			}catch(Exception e){

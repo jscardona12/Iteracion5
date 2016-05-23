@@ -4,6 +4,10 @@ import java.util.ArrayList;
 
 public class MensajeCargas extends Mensaje{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private ArrayList<CargaUnificada> cargas;
 
 	public MensajeCargas(int numPuerto, String mensaje, ArrayList<CargaUnificada>cargas) {

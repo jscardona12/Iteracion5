@@ -909,7 +909,7 @@ public class PuertoAndesMaster {
 				}
 			}
 			if(!cargasHuerfanas.isEmpty()){
-				jms.empezarRF14(estandarizarCargas(cargasHuerfanas));
+				jms.empezarRF14(estandarizarCargas(cargasHuerfanas),null,rb.getId_buque());
 			}
 			
 			conn.commit();
