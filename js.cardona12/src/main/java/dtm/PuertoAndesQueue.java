@@ -316,9 +316,9 @@ public class PuertoAndesQueue
 				Mensaje msj = (Mensaje) obj.getObject();
 				String texto = msj.getMensaje();
 				if (texto.equals("RF14")) {
-					responderRF14(cola2);
+					responderRF14(cola3);
 				} else if (texto.contains("RF15P1")) {
-					responderRF15(cola2, texto.substring(7));
+					responderRF15(cola3, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));
 				}
