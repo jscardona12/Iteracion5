@@ -69,7 +69,7 @@ public class PuertoAndesMaster {
 	 */
 	public PuertoAndesMaster(String contextPathP) {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
-		jms = new PuertoAndesQueue();
+		jms = new PuertoAndesQueue(this);
 		jms.inicializarContexto();
 		initConnectionData();
 	}
@@ -813,6 +813,39 @@ public class PuertoAndesMaster {
 		}
 	}
 	
+	public ArrayList<ConsultaAreas> darMovimientosArea(int idAgente) throws Exception {
+		DAOOperadorPortuario daoOperador = new DAOOperadorPortuario();
+		ArrayList<ConsultaAreas> resp = new ArrayList<ConsultaAreas>();
+		try 
+		{
+			//////Transacción
+			this.conn = darConexion();
+			daoOperador.setConn(conn);
+			resp =daoOperador.getAreas(idAgente);
+			conn.commit();
+			return resp;
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				daoOperador.cerrarRecursos();
+				if(this.conn!=null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
 	public ArrayList<ConsultaAreas> darAreas(int area1,int area2) throws Exception {
 		DAOOperadorPortuario daoOperador = new DAOOperadorPortuario();
 		ArrayList<ConsultaAreas> resp = new ArrayList<ConsultaAreas>();
@@ -1524,5 +1557,74 @@ public class PuertoAndesMaster {
 	
 	}
 	
+	public boolean buscarExportador(String rut) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			boolean resp =daoExportadores.buscarExportador(rut);
+			
+			daoExportadores.cerrarRecursos();
+			return resp;
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
+	public void actualizarExportador(String rut, int descuento) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			daoExportadores.actualizarExportador(rut, descuento);
+			
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
 }
 

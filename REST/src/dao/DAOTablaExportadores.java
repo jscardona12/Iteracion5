@@ -68,6 +68,15 @@ public class DAOTablaExportadores {
 		recursos.add(prepStmt);
 		prepStmt.executeUpdate();
 	}
+	
+	public boolean existeExportador(String rut) throws SQLException{
+		String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+		System.out.println(sql);
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		return prepStmt.executeQuery().next();
+	}
+	
 	public ListaExportadorCompleto consultarExportador(int idExportador, ParametroBusqueda pb) throws SQLException{
 		ArrayList<ExportadorCompleto> registros = new ArrayList<>();
 		String sql = "SELECT * FROM "

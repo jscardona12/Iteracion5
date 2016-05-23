@@ -353,12 +353,15 @@ public class JMSManager {
 
 	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
+		int numClientes = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
 		System.out.println("va a publicar RF15P1 - AN " + rut);
 		topicPublisher.publish(msg);
 		System.out.println("publico RF15P1 - AN " + rut);
 		try {
+			if(master.encontrarExportador(rut))numClientes++;
+			
 			inicializarContexto();
 
 			// Inicia sesion utilizando la conexion
@@ -369,24 +372,27 @@ public class JMSManager {
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
 
-			// Recibimos LOS mensaje
-
-			int numClientes = 0;
+			// Recibimos LOS mensajes
 
 			System.out.println("Esperando 1 mensaje RF15 - AN...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			TextMessage txt = (TextMessage) msn;
 			String respuesta1 = txt.getText();
 			if (respuesta1.contains("SI"))
 				numClientes++;
 
 			System.out.println("Esperando 2 mensaje RF15 - AN...");
-			Message msn2 = consumer.receive();
+			Message msn2 = consumer.receive(5000);
 			TextMessage txt2 = (TextMessage) msn2;
 			String respuesta2 = txt2.getText();
 			if (respuesta2.contains("SI"))
 				numClientes++;
 
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("ERROR : " + e.getMessage());
+		} finally {
 			System.out.println("El exportador existe en " + numClientes + " bd - AN");
 
 			switch (numClientes) {
@@ -399,13 +405,8 @@ public class JMSManager {
 			}
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			
+
 			master.actualizarExportador(rut, descuento);
-
-			cerrarConexion();
-
-		} catch (Exception e) {
-			throw e;
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
@@ -433,18 +434,11 @@ public class JMSManager {
 	public void responderRF15(Queue cola, String rut) {
 		System.out.println("Va a responer rf15 - AN");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR
 			// PARAMETRO
-			Statement st = conn1.createStatement();
-			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
-			System.out.println(sql + " - AN");
-			ResultSet rs = st.executeQuery(sql);
-			boolean existe = rs.next();
-			st.close();
+			boolean existe = master.encontrarExportador(rut);
 			// **********************************************************************
 
 			// Inicia sesion utilizando la conexion
@@ -478,9 +472,7 @@ public class JMSManager {
 		topicPublisher.publish(msg);
 		System.out.println("publico RFC11 - AN ");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -489,28 +481,28 @@ public class JMSManager {
 			// creado
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
+			
+			
 
 			// Recibimos LOS mensaje
 
-
 			System.out.println("Esperando 1 mensaje RFC11 - AN...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage) msn;
 			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
 
-
 			System.out.println("Esperando 2 mensaje RFC11 - AN...");
-			Message msn2 = consumer.receive();
+			Message msn2 = consumer.receive(5000);
 			ObjectMessage txt2 = (ObjectMessage) msn2;
 			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
 			cerrarConexion();
-			
-			for(AreaUnificada au : respuesta1.getAreas()){
-				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+
+			for (AreaUnificada au : respuesta1.getAreas()) {
+				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
 			}
-			
-			for(AreaUnificada au : respuesta2.getAreas()){
-				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+
+			for (AreaUnificada au : respuesta2.getAreas()) {
+				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
 			}
 
 		} catch (Exception e) {
@@ -534,9 +526,7 @@ public class JMSManager {
 
 		System.out.println("Va a responer RFC11 - AN");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -555,7 +545,7 @@ public class JMSManager {
 			cerrarConexion();
 
 		} catch (Exception e) {
-
+			System.out.println("Error: " + e.getMessage());
 		}
 	}
 }
