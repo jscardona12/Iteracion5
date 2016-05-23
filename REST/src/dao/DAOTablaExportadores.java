@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 import vos.Exportador;
@@ -59,7 +60,14 @@ public class DAOTablaExportadores {
 	public void setConn(Connection con) {
 		this.conn = con;
 	}
-	
+	public void actualizarExportador(String rut, int descuento) throws SQLException{
+		String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
+		System.out.println(sql);
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		prepStmt.executeUpdate();
+	}
 	public ListaExportadorCompleto consultarExportador(int idExportador, ParametroBusqueda pb) throws SQLException{
 		ArrayList<ExportadorCompleto> registros = new ArrayList<>();
 		String sql = "SELECT * FROM "

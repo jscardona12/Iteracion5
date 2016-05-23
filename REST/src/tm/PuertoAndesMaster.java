@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,6 +19,7 @@ import javax.jms.JMSException;
 import dao.DAOTablaAreasAlmacenamiento;
 import dao.DAOTablaBuques;
 import dao.DAOTablaCargas;
+import dao.DAOTablaExportadores;
 import dao.DAOTablaFacturas;
 import dao.DAOTablaRegistroAlmacenamiento;
 import dao.DAOTablaRegistroBuques;
@@ -947,6 +949,40 @@ public class PuertoAndesMaster {
 		return new ListaAreaUnificada(cu);
 	}
 	
+	public void actualizarExportador(String rut, int descuento) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			daoExportadores.actualizarExportador(rut, descuento);
+			
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
 	public int consultarBono(String rut) throws Exception{
 		return jms.empezarRF15(rut);
 	}

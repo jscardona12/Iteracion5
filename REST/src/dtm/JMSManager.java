@@ -359,9 +359,7 @@ public class JMSManager {
 		topicPublisher.publish(msg);
 		System.out.println("publico RF15P1 - AN " + rut);
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -401,16 +399,9 @@ public class JMSManager {
 			}
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			Statement st = conn1.createStatement();
-			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
-			System.out.println(sql);
+			
+			master.actualizarExportador(rut, descuento);
 
-			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - AN");
-			// Si se envio de forma correcta el mensaje y se realizaron los
-			// cambios
-			// se hace commit
-			utx.commit();
 			cerrarConexion();
 
 		} catch (Exception e) {
@@ -426,22 +417,14 @@ public class JMSManager {
 
 	public void terminarRF15(String rutDescuento) throws JMSException {
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			String[] data = rutDescuento.split(" ");
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			Statement st = conn1.createStatement();
-			String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + data[1] + " WHERE RUT = " + data[0];
-			System.out.println(sql);
+			master.actualizarExportador(data[0], Integer.parseInt(data[1]));
 			// *******************************************************
 
-			int num = st.executeUpdate(sql);
-			System.out.println("Se actualizaron " + num + " filas - PuertoAndes0206 - AN");
-
-			utx.commit();
 			cerrarConexion();
 		} catch (Exception e) {
 		}
