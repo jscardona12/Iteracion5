@@ -315,8 +315,8 @@ public class JMSManager {
 				ObjectMessage obj = (ObjectMessage) msg;
 				Mensaje msj = (Mensaje) obj.getObject();
 				String texto = msj.getMensaje();
-				if (texto.equals("RF14")) {
-					responderRF14(cola1);
+				if(texto.startsWith("RF14")){
+//					responderRF14(cola1,texto.split("-")[1]);
 				} else if (texto.contains("RF15P1")) {
 					responderRF15(cola1, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
@@ -336,9 +336,9 @@ public class JMSManager {
 				ObjectMessage obj = (ObjectMessage) msg;
 				Mensaje msj = (Mensaje) obj.getObject();
 				String texto = msj.getMensaje();
-				if (texto.equals("RF14")) {
-					responderRF14(cola2);
-				} else if (texto.contains("RF15P1")) {
+				if(texto.startsWith("RF14")){
+//					responderRF14(cola1, texto.split("-")[1]);
+				}else if (texto.contains("RF15P1")) {
 					responderRF15(cola2, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
 					terminarRF15(texto.substring(7));

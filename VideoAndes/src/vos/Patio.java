@@ -45,6 +45,10 @@ public class Patio extends Almacenamiento{
 		this.ancho = ancho;
 	}
 
+	public Patio(String estado, String tipo) {
+		super(0,tipo,estado);
+	}
+
 	/**
 	 * Método getter del atributo dimension
 	 * @return dimension del silo

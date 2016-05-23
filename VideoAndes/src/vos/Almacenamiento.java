@@ -15,6 +15,10 @@ public abstract class Almacenamiento {
 	 */
 	@JsonProperty(value="id")
 	private int id;
+	@JsonProperty(value="estado")
+	private String estado;
+	@JsonProperty(value="tipo")
+	private String tipo;
 
 	//--------------------------
 	//CONSTRUCTOR
@@ -28,6 +32,13 @@ public abstract class Almacenamiento {
 	public Almacenamiento(@JsonProperty(value="id")int id){
 		super();
 		this.id=id;
+	}
+	public Almacenamiento(@JsonProperty(value="id")int id, @JsonProperty(value="tipo")String tipo,
+							@JsonProperty(value="estado")String estado){
+		super();
+		this.id=id;
+		this.tipo=tipo;
+		this.estado=estado;
 	}
 	//--------------------------
 	//METODOS
@@ -45,6 +56,18 @@ public abstract class Almacenamiento {
 	 */
 	public void setID(int id){
 		this.id=id;
+	}
+	public String getEstado() {
+		return estado;
+	}
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+	public String getTipo() {
+		return tipo;
+	}
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
 	}
 
 }

@@ -60,6 +60,10 @@ public class Bodega extends Almacenamiento{
 		this.separacionColumnas=separacionColumnas;
 	}
 
+	public Bodega(String estado, String tipo) {
+		super(0,tipo,estado);
+	}
+
 	/**
 	 * Método getter del atributo largo
 	 * @return largo de la bodega

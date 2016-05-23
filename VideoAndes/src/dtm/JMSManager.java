@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -43,7 +44,13 @@ import javax.transaction.UserTransaction;
 import dao.DAOTablaAlmacenamiento;
 import dao.DAOTablaCargaEnAlmacen;
 import tm.VideoAndesMaster;
+import vos.Almacenamiento;
+import vos.Bodega;
+import vos.Cobertizo;
+import vos.ListaAlmacenamientos;
 import vos.ListaMovimientoAlmacen;
+import vos.Patio;
+import vos.Silo;
 
 /**
  * A simple JMS Queue example that creates a producer and consumer on a queue and sends then receives a message.
@@ -183,6 +190,8 @@ public class JMSManager
 			ts2 = connTopic2.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			ts3 = connTopic3.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
 			connTopic1.start();
+			connTopic2.start();
+			connTopic3.start();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -318,6 +327,70 @@ public class JMSManager
 		recibirRF14(cargas);
 
 	}
+	
+	public int empezarRF15(String rut) throws Exception {
+		int descuento = 0;
+		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RF15P1 - AN " + rut);
+		topicPublisher.publish(msg);
+		System.out.println("publico RF15P1 - AN " + rut);
+		try {
+			inicializarContexto();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+			int numClientes = 0;
+
+			System.out.println("Esperando 1 mensaje RF15 - AN...");
+			Message msn = consumer.receive();
+			TextMessage txt = (TextMessage) msn;
+			String respuesta1 = txt.getText();
+			if (respuesta1.contains("SI"))
+				numClientes++;
+
+//			System.out.println("Esperando 2 mensaje RF15 - AN...");
+//			Message msn2 = consumer.receive();
+//			TextMessage txt2 = (TextMessage) msn2;
+//			String respuesta2 = txt2.getText();
+//			if (respuesta2.contains("SI"))
+//				numClientes++;
+
+			System.out.println("El exportador existe en " + numClientes + " bd - AN");
+
+			switch (numClientes) {
+			case 2:
+				descuento = 3;
+				break;
+			case 3:
+				descuento = 5;
+				break;
+			}
+
+			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
+			
+			videoMaster.actualizarExportador(rut, descuento);
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+			throw e;
+		}
+		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
+		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
+		System.out.println("va a publicar RF15P2 - AN " + rut + " descuento: " + descuento);
+		topicPublisher.publish(msgFinal);
+		System.out.println("publico RF15P2 - AN");
+		return descuento;
+	}
 
 	public void recibirRF14(ArrayList<CargaUnificada> cargas){
 		try{
@@ -441,8 +514,181 @@ public class JMSManager
 
 
 
-	public void responderRF15(Queue cola){
-		System.out.println("Va a responer rf15");		
+	public void terminarRF15(String rutDescuento) throws JMSException {
+		try {
+			inicializarContexto();
+
+			String[] data = rutDescuento.split(" ");
+
+			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
+			videoMaster.actualizarExportador(data[0], Integer.parseInt(data[1]));
+			// *******************************************************
+
+			cerrarConexion();
+		} catch (Exception e) {
+		}
+	}
+
+	public void responderRF15(Queue cola, String rut) {
+		System.out.println("Va a responer rf15 - AN");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR
+			// PARAMETRO
+			Statement st = conn1.createStatement();
+			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+			System.out.println(sql + " - AN");
+			ResultSet rs = st.executeQuery(sql);
+			boolean existe = rs.next();
+			st.close();
+			// **********************************************************************
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(cola);
+
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			TextMessage msg = session.createTextMessage();
+			String peticion = existe ? "SI" : "NO";
+			msg.setText(peticion);
+			producer.send(msg);
+			System.out.println("Se envio " + peticion + " - AN");
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+
+		}
+	}
+
+	public ListaAlmacenamientos empezarRFC11() throws Exception {
+		ArrayList<Bodega> bodegas = new ArrayList<>();
+		ArrayList<Silo> silos = new ArrayList<>();
+		ArrayList<Cobertizo> cobertizos = new ArrayList<>();
+		ArrayList<Patio> patios = new ArrayList<>();
+		Mensaje msj = new Mensaje(3, "RFC11");
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RFC11 - AN");
+		topicPublisher.publish(msg);
+		System.out.println("publico RFC11 - AN ");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+
+			System.out.println("Esperando 1 mensaje RFC11 - AN...");
+			Message msn = consumer.receive();
+			ObjectMessage txt = (ObjectMessage) msn;
+			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
+
+
+			System.out.println("Esperando 2 mensaje RFC11 - AN...");
+			Message msn2 = consumer.receive();
+			ObjectMessage txt2 = (ObjectMessage) msn2;
+			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
+			cerrarConexion();
+			
+			for(AreaUnificada au : respuesta1.getAreas()){
+				String tipo = au.getTipo();
+				if(tipo.equals("Bodega")){
+					bodegas.add(new Bodega(au.getEstado(),au.getTipo()));
+				}else if(tipo.equals("Silo")){
+					silos.add(new Silo(au.getEstado(),au.getTipo()));					
+				}else if(tipo.equals("Patio")){
+					patios.add(new Patio(au.getEstado(),au.getTipo()));					
+				}else if(tipo.equals("Cobertizo")){
+					cobertizos.add(new Cobertizo(au.getEstado(),au.getTipo()));					
+				}
+			}
+			
+			for(AreaUnificada au : respuesta2.getAreas()){
+				String tipo = au.getTipo();
+				if(tipo.equals("Bodega")){
+					bodegas.add(new Bodega(au.getEstado(),au.getTipo()));
+				}else if(tipo.equals("Silo")){
+					silos.add(new Silo(au.getEstado(),au.getTipo()));					
+				}else if(tipo.equals("Patio")){
+					patios.add(new Patio(au.getEstado(),au.getTipo()));					
+				}else if(tipo.equals("Cobertizo")){
+					cobertizos.add(new Cobertizo(au.getEstado(),au.getTipo()));					
+				}
+			}
+
+		} catch (Exception e) {
+			throw e;
+		}
+		return new ListaAlmacenamientos(silos, cobertizos, bodegas, patios);
+	}
+
+	public void responderRFC11(Queue cola) throws Exception {
+		// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+		// IMPLEMENTADO DE RFC6 Y CONVIERTEN LAS
+		// AREAS A LAS AREAS ESTANDAR.
+		ListaAlmacenamientos lista = videoMaster.consultarAlmacenamientos(0, null);
+		List<Bodega> bodegas = lista.getBodegas();
+		List<Silo> silos = lista.getSilos();
+		List<Cobertizo> cobertizos = lista.getCobertizos();
+		List<Patio> patios = lista.getPatios();
+		
+		ArrayList<AreaUnificada> areasUnificadas = new ArrayList<>();
+		for (Bodega a : bodegas) {
+			areasUnificadas.add(new AreaUnificada(a.getEstado(), "Bodega"));
+		}
+		for (Silo a : silos) {
+			areasUnificadas.add(new AreaUnificada(a.getEstado(), "Silo"));
+		}
+		for (Cobertizo a : cobertizos) {
+			areasUnificadas.add(new AreaUnificada(a.getEstado(), "Cobertizo"));
+		}
+		for (Patio a : patios) {
+			areasUnificadas.add(new AreaUnificada(a.getEstado(), "Patio"));
+		}
+		MensajeAreas msj = new MensajeAreas(3, "RFC11", areasUnificadas);
+
+		System.out.println("Va a responer RFC11 - AN");
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(cola);
+
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			ObjectMessage msg = session.createObjectMessage(msj);
+			producer.send(msg);
+			System.out.println("Se puso en la cola de RFC11 - AN");
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+
+		}
 	}
 
 	public class Listener1 implements MessageListener
@@ -454,8 +700,12 @@ public class JMSManager
 				String texto = m.getMensaje();
 				if(texto.startsWith("RF14")){
 					responderRF14(cola1, texto.split("-")[1]);
-				}else if(texto.equals("RF15")){
-					responderRF15(cola1);
+				}else if (texto.contains("RF15P1")) {
+					responderRF15(cola1, texto.substring(7));
+				} else if (texto.contains("RF15P2")) {
+					terminarRF15(texto.substring(7));
+				} else if (texto.contains("RFC11")) {
+					responderRFC11(cola1);
 				}
 			}catch(Exception e){
 				e.printStackTrace();
@@ -471,6 +721,12 @@ public class JMSManager
 				String texto = m.getMensaje();
 				if(texto.startsWith("RF14")){
 					responderRF14(cola3,texto.split("-")[1]);
+				}else if (texto.contains("RF15P1")) {
+					responderRF15(cola1, texto.substring(7));
+				} else if (texto.contains("RF15P2")) {
+					terminarRF15(texto.substring(7));
+				} else if (texto.contains("RFC11")) {
+					responderRFC11(cola1);
 				}
 			}catch(Exception e){
 				e.printStackTrace();

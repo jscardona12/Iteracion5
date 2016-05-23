@@ -543,13 +543,14 @@ public class PuertoAndesQueue
 
 	public void responderRF15(Queue cola, String rut) {
 		System.out.println("Va a responer rf15 - JS");
+		System.out.println("(las modificaciones de syso si estan bien)");
 		try {
 			
 
 			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR PARAMETRO
 			
 			boolean existe = master.buscarExportador(rut);
-		
+			
 			// **********************************************************************
 
 			// Inicia sesion utilizando la conexion
@@ -656,7 +657,7 @@ public class PuertoAndesQueue
 			cerrarConexion();
 
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 	}
 }
