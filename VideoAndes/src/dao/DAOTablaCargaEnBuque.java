@@ -64,9 +64,10 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 			String tipo = rs.getString("TIPO");
 			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
 			int peso = Integer.parseInt(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
-			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
+			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
 		}
 
 		return cargas;
@@ -81,19 +82,19 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 	 * @throws Exception - Cualquier error que no corresponda a la base de datos
 	 */
 	public void addCarga(Carga carga) throws SQLException, Exception {
-//
-//		String sql = "INSERT INTO CARGAS VALUES (";
-//		sql += carga.getID() + ",";
-//		sql += carga.getBuque() + ",";
-//		sql += carga.getExportador() + ",";
-//		sql += carga.getNumero() + ",";
-//		sql += carga.getTipoCarga() + ",";
-//		sql += carga.getVolumen() + ")";
-//		System.out.println("SQL stmt:" + sql);
-//
-//		PreparedStatement prepStmt = conn.prepareStatement(sql);
-//		recursos.add(prepStmt);
-//		prepStmt.executeQuery();
+		//
+		//		String sql = "INSERT INTO CARGAS VALUES (";
+		//		sql += carga.getID() + ",";
+		//		sql += carga.getBuque() + ",";
+		//		sql += carga.getExportador() + ",";
+		//		sql += carga.getNumero() + ",";
+		//		sql += carga.getTipoCarga() + ",";
+		//		sql += carga.getVolumen() + ")";
+		//		System.out.println("SQL stmt:" + sql);
+		//
+		//		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		//		recursos.add(prepStmt);
+		//		prepStmt.executeQuery();
 
 	}
 
@@ -182,39 +183,41 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 			String tipo = rs.getString("TIPO");
 			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
 			int peso = Integer.parseInt(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
-			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
+			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
 		}
 		return cargas;
 	}
-	
+
 	public ArrayList<Carga> darCargasEnBuque(int id_b) throws SQLException, Exception {
-    ArrayList<Carga> cargas = new ArrayList<Carga>();
+		ArrayList<Carga> cargas = new ArrayList<Carga>();
 
-    String sql = "SELECT c.* FROM CARGA c, CARGAENBUQUE cb "
-        +"WHERE c.ID=cb.ID_CARGA AND cb.ID_BUQUE="+id_b+ 
-        " AND cb.FECHA_RETIRADO IS NULL";
+		String sql = "SELECT c.* FROM CARGA c, CARGAENBUQUE cb "
+				+"WHERE c.ID=cb.ID_CARGA AND cb.ID_BUQUE="+id_b+ 
+				" AND cb.FECHA_RETIRADO IS NULL";
 
-    PreparedStatement prepStmt = conn.prepareStatement(sql);
-    recursos.add(prepStmt);
-    ResultSet rs = prepStmt.executeQuery();
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = prepStmt.executeQuery();
 
-    while (rs.next()) {
-      String destino = rs.getString("DESTINO");
-      int id = Integer.parseInt(rs.getString("ID"));
-      String origen = (rs.getString("ORIGEN"));
-      int id_exportador = Integer.parseInt(rs.getString("ID_EXPORTADOR"));
-      int numero = Integer.parseInt(rs.getString("NUMERO"));
-      String tipo = rs.getString("TIPO");
-      int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
-      int peso = Integer.parseInt(rs.getString("PESO"));
-      boolean rodada = rs.getBoolean("RODADA");
-      boolean contenedor = rs.getBoolean("CONTENEDOR");
-      cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
-    }
-    return cargas;
-  }
+		while (rs.next()) {
+			String destino = rs.getString("DESTINO");
+			int id = Integer.parseInt(rs.getString("ID"));
+			String origen = (rs.getString("ORIGEN"));
+			int id_exportador = Integer.parseInt(rs.getString("ID_EXPORTADOR"));
+			int numero = Integer.parseInt(rs.getString("NUMERO"));
+			String tipo = rs.getString("TIPO");
+			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
+			int peso = Integer.parseInt(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
+			boolean rodada = rs.getBoolean("RODADA");
+			boolean contenedor = rs.getBoolean("CONTENEDOR");
+			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
+		}
+		return cargas;
+	}
 
 	public void registrarRetiro(int idB, Carga c) throws SQLException{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -247,15 +250,15 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 	}
 
 
-  public void cargarBuqueConCarga(Carga c, Buque b) throws SQLException  {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    String fecha = "TO_DATE('" + sdf.format(new Date()) + "', 'yyyy/mm/dd hh24:mi:ss')";
-    String sql = "INSERT INTO CARGAENBUQUE "+
-        "VALUES(" + c.getID() + ", " + b.getID() + ", "+fecha+", null) ";
-        
-    PreparedStatement prepStmt = conn.prepareStatement(sql);
-    recursos.add(prepStmt);
-    prepStmt.executeQuery();
-  }
+	public void cargarBuqueConCarga(Carga c, Buque b) throws SQLException  {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		String fecha = "TO_DATE('" + sdf.format(new Date()) + "', 'yyyy/mm/dd hh24:mi:ss')";
+		String sql = "INSERT INTO CARGAENBUQUE "+
+				"VALUES(" + c.getID() + ", " + b.getID() + ", "+fecha+", null) ";
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		prepStmt.executeQuery();
+	}
 
 }

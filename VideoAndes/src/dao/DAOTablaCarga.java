@@ -40,9 +40,10 @@ public class DAOTablaCarga extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			double peso = Double.parseDouble(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
-			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
+			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
 		}
 		return cargas;
 	}
@@ -75,9 +76,10 @@ public class DAOTablaCarga extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			double peso = Double.parseDouble(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
-			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
+			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
 		}
 
 		return cargas;
@@ -189,9 +191,10 @@ public class DAOTablaCarga extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			double peso = Double.parseDouble(rs.getString("PESO"));
+			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
-			resp =(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor));
+			resp=(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
 		}
 		return resp;
 	}

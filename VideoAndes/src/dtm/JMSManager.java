@@ -294,9 +294,80 @@ public class JMSManager
 		ObjectMessage tm = ts2.createObjectMessage(mensaje);
 		topicPublisher.publish(tm);
 		System.out.println("bien");
+		recibirRF14(cargas);
 
 	}
 
+	public void recibirRF14(ArrayList<CargaUnificada> cargas){
+		try{
+			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			inicializarContexto();
+			utx.begin();
+
+			//Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			//Crea una sesion para producir mensajes hacia la cola que habiamos creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			//Recibimos un mensaje
+			System.out.println("PuertoAndes0206 - Esperando mensaje...");
+			Message msn = consumer.receive();
+			ObjectMessage txt = (ObjectMessage)msn;
+			Mensaje mensaje= (Mensaje)txt.getObject();
+			double capacidad1=0,capacidad3=0;
+			if(mensaje.getNumPuerto()==1){
+				capacidad1=Double.parseDouble(mensaje.getMensaje());
+			}else{
+				capacidad3=Double.parseDouble(mensaje.getMensaje());
+			}
+			msn = consumer.receive();
+			txt = (ObjectMessage)msn;
+			mensaje= (Mensaje)txt.getObject();
+			if(mensaje.getNumPuerto()==1){
+				capacidad1=Integer.parseInt(mensaje.getMensaje());
+			}else{
+				capacidad3=Integer.parseInt(mensaje.getMensaje());
+			}
+			
+			ArrayList<CargaUnificada> cargasPara1=new ArrayList<>();
+			ArrayList<CargaUnificada> cargasPara3=new ArrayList<>();
+			boolean sePuede=true;
+			for(CargaUnificada c:cargas){
+				double espacio = c.getVolumen();
+				if(capacidad1-espacio>=0){
+					cargasPara1.add(c);
+				}else if(capacidad3-espacio>=0){
+					cargasPara3.add(c);
+				}else{
+					sePuede=false;
+				}
+			}
+			if(!sePuede){
+				MessageProducer producer = session.createProducer(cola1);
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+				producer.send(message);
+				producer = session.createProducer(cola3);
+				message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+				producer.send(message);
+			}else{
+				MessageProducer producer = session.createProducer(cola1);
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", cargasPara1) );
+				producer.send(message);
+				producer = session.createProducer(cola3);
+				message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", cargasPara3) );
+				producer.send(message);
+			}
+			
+			utx.commit();
+			cerrarConexion();
+
+		}catch(Exception e){
+
+		}
+	}
+	
 	public void responderRF14(Queue cola, String tipo){
 		System.out.println("Va a responer rf14");
 		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
@@ -331,16 +402,18 @@ public class JMSManager
 				System.out.println("PuertoAndes0206 - Recibido..."+porInsertar.getMensaje());
 
 				//TRANSACCION PROPIA: insertar cargas en bd
-				videoMaster.insertarCargas(porInsertar.getCargas());
+				if(!porInsertar.getMensaje().equals("CANCEL")){
+					videoMaster.insertarCargas(porInsertar.getCargas());
+				}
 
 
 				utx.commit();
 				cerrarConexion();
 
 			}catch(Exception e){
-
+				e.printStackTrace();
 			}
-		} catch (SQLException e1) {
+		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 	}
