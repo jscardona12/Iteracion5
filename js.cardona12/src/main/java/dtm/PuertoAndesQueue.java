@@ -580,10 +580,9 @@ public class PuertoAndesQueue
 		topicPublisher.publish(msg);
 		System.out.println("publico RFC11 - JS ");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+			
 			inicializarContexto();
-			utx.begin();
-
+			
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -635,9 +634,9 @@ public class PuertoAndesQueue
 
 		System.out.println("Va a responer RFC11 - JS");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+
 			inicializarContexto();
-			utx.begin();
+			
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
