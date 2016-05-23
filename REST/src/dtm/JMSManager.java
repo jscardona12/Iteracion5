@@ -471,9 +471,7 @@ public class JMSManager {
 		topicPublisher.publish(msg);
 		System.out.println("publico RFC11 - AN ");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -487,13 +485,13 @@ public class JMSManager {
 
 
 			System.out.println("Esperando 1 mensaje RFC11 - AN...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage) msn;
 			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
 
 
 			System.out.println("Esperando 2 mensaje RFC11 - AN...");
-			Message msn2 = consumer.receive();
+			Message msn2 = consumer.receive(5000);
 			ObjectMessage txt2 = (ObjectMessage) msn2;
 			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
 			cerrarConexion();
@@ -527,9 +525,7 @@ public class JMSManager {
 
 		System.out.println("Va a responer RFC11 - AN");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -548,7 +544,7 @@ public class JMSManager {
 			cerrarConexion();
 
 		} catch (Exception e) {
-
+			System.out.println("Error: " + e.getMessage());
 		}
 	}
 }
