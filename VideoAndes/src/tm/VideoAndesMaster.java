@@ -23,6 +23,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import javax.activation.DataSource;
 import javax.jms.ConnectionFactory;
@@ -63,6 +64,7 @@ import dao.DAOTablaSilo;
 import dao.DAOTablaTipoCarga;
 import dao.DAOTablaUsuarios;
 import dao.DAOTablaVideos;
+import dtm.CargaUnificada;
 import dtm.JMSManager;
 import exception.BuqueDeshabilitadoException;
 import vos.Video;
@@ -139,12 +141,12 @@ public class VideoAndesMaster {
 	 * Conexión a la base de datos
 	 */
 	private Connection conn;
-	
+
 	/**
 	 * 
 	 */
 	private JMSManager jms;
-	
+
 
 	/**
 	 * Método constructor de la clase VideoAndesMaster, esta clase modela y contiene cada una de las 
@@ -156,13 +158,13 @@ public class VideoAndesMaster {
 	public VideoAndesMaster(String contextPathP) {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();		
-		jms = new JMSManager();
+		jms = new JMSManager(this);
 		System.out.println("HAPPENING");
 	}
 
-	
-	
-	
+
+
+
 	/**
 	 * Método que  inicializa los atributos que se usan para la conexion a la base de datos.
 	 * <b>post: </b> Se han inicializado los atributos que se usan par la conexión a la base de datos.
@@ -198,7 +200,7 @@ public class VideoAndesMaster {
 	////////////////////////////////////////
 	///////Transacciones////////////////////
 	////////////////////////////////////////
-	
+
 	/**
 	 * Metodo que modela la transaccion que agrega un importador a la base de datos.
 	 * @param id 
@@ -2195,12 +2197,129 @@ public class VideoAndesMaster {
 
 
 
-	public void iniciarRF14() {
-		try {
-			jms.empezarRF14();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
+	public void iniciarRF14(List<Integer> idCargas) throws Exception{
+		ArrayList<CargaUnificada> cargas = new ArrayList<>();
+		for(Integer id:idCargas){
+			Carga actual = getCarga(id);
+			cargas.add(new CargaUnificada(actual.getPeso(), actual.getVolumen(), actual.getTipoCarga(), actual.getValor()));
+		}
+		jms.empezarRF14(cargas);
+	}
+
+
+
+
+	public int getAlmacenamientoLibre(String tipo) throws Exception {
+		ListaAlmacenamientos resp = null;
+		DAOTablaAlmacenamiento daoAlmacenamiento = new DAOTablaAlmacenamiento();
+		try 
+		{
+			daoAlmacenamiento.setConn(conn);
+			resp = daoAlmacenamiento.consultarAlmacenamientos(0, null);
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			daoAlmacenamiento.cerrarRecursos();
+		}
+		int libre = 0;
+		DAOTablaCargaEnAlmacen daoCargaAlmacen = new DAOTablaCargaEnAlmacen();
+		try {
+			daoCargaAlmacen.setConn(conn);
+
+			for(Bodega b : resp.getBodegas()) {
+				double sumaCapacidad = b.getAncho() * b.getLargo();
+				List<Carga> cargas = daoCargaAlmacen.darCargasEnAlmacen(b.getID());
+
+				for(Carga carga : cargas) {
+					sumaCapacidad -= carga.getVolumen();
+				}
+
+				libre+=sumaCapacidad;
+			}
+
+			for(Silo b : resp.getSilos()) {
+				double sumaCapacidad = b.getCapacidad();
+				List<Carga> cargas = daoCargaAlmacen.darCargasEnAlmacen(b.getID());
+
+				for(Carga carga : cargas) {
+					sumaCapacidad -= carga.getVolumen();
+				}
+				libre+=sumaCapacidad;
+			}
+
+			for(Cobertizo b : resp.getCobertizos()) {
+				double sumaCapacidad = b.getAncho() * b.getLargo();
+				List<Carga> cargas = daoCargaAlmacen.darCargasEnAlmacen(b.getID());
+				for(Carga carga : cargas) {
+					sumaCapacidad -= carga.getVolumen();
+				}
+				libre+=sumaCapacidad;
+			}
+
+			for(Patio b : resp.getPatios()) {
+				double sumaCapacidad = b.getAncho() * b.getLargo();
+				List<Carga> cargas = daoCargaAlmacen.darCargasEnAlmacen(b.getID());
+				for(Carga carga : cargas) {
+					sumaCapacidad -= carga.getVolumen();
+				}
+				libre+=sumaCapacidad;
+			}
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			daoCargaAlmacen.cerrarRecursos();
+		}
+
+		return libre;
+	}
+
+
+
+
+	public void insertarCargas(ArrayList<CargaUnificada> cargas) throws Exception {
+		ArrayList<Carga> cargas2 = new ArrayList<>();
+		for(CargaUnificada c:cargas){
+			Random r = new Random();
+			int id=1000000+r.nextInt(1)*10000000;
+			Carga car = new Carga(id, "", 0, 1, "", c.getTipo(), c.getVolumen(), c.getPeso(), false, true, c.getValor());
+			addCarga(car);
+			cargas2.add(car);
+		}
+		DAOTablaCargaEnAlmacen daoAlmacen = new DAOTablaCargaEnAlmacen();
+		try 
+		{
+			//////Transacción
+			this.conn = darConexion();
+			for(Carga c:cargas2){
+				Almacenamiento m = buscarAlmacenamientoAdecuado(c, conn);
+				cargarAreaAlmacenamiento(c, m, conn);
+			}
+			conn.commit();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			daoAlmacen.cerrarRecursos();
 		}
 	}
 }

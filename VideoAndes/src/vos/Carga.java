@@ -80,6 +80,14 @@ public class Carga {
 	private boolean contenedor;
 
 	/**
+	 * valor de la carga
+	 */
+	@JsonProperty(value="valor")
+	private double valor;
+
+	
+	
+	/**
 	 * Método constructor de la clase carga
 	 * <b>post: </b> Crea la carga con los valores que entran como parámetro
 	 * @param id - Id de la carga.
@@ -95,7 +103,8 @@ public class Carga {
 			@JsonProperty(value="volumen")double volumen,
 			@JsonProperty(value="peso")double peso,
 			@JsonProperty(value="rodada")boolean rodada,
-			@JsonProperty(value="contenedor")boolean contenedor) {
+			@JsonProperty(value="contenedor")boolean contenedor,
+			@JsonProperty(value="valor")double valor) {
 		super();
 		this.id = id;
 		this.origen = origen;
@@ -107,6 +116,15 @@ public class Carga {
 		this.rodada=rodada;
 		this.contenedor=contenedor;
 		this.destino=destino;
+		this.valor=valor;
+	}
+
+	public double getValor() {
+		return valor;
+	}
+
+	public void setValor(double valor) {
+		this.valor = valor;
 	}
 
 	/**

@@ -129,12 +129,16 @@ public class CargaService {
 	 */
 	@GET
 	@Path("rf14")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response darMovimientosCargaExportadorConValorMayorA() {
+	public Response darMovimientosCargaExportadorConValorMayorA(List<Integer> idCargas) {
 
 		VideoAndesMaster tm = new VideoAndesMaster(getPath());
-		tm.iniciarRF14();
-
+		try {
+			tm.iniciarRF14(idCargas);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
 		return Response.status(200).entity("").build();
 	}
 

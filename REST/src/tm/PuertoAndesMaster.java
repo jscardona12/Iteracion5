@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,6 +19,7 @@ import javax.jms.JMSException;
 import dao.DAOTablaAreasAlmacenamiento;
 import dao.DAOTablaBuques;
 import dao.DAOTablaCargas;
+import dao.DAOTablaExportadores;
 import dao.DAOTablaFacturas;
 import dao.DAOTablaRegistroAlmacenamiento;
 import dao.DAOTablaRegistroBuques;
@@ -27,9 +29,12 @@ import dao.DAOTablaUsuarios;
 import dtm.CargaUnificada;
 import dtm.JMSManager;
 import vos.AreaAlmacenamiento;
+import vos.AreaUnificada;
 import vos.Buque;
 import vos.Carga;
+import vos.ConsultaAreas;
 import vos.Factura;
+import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
 import vos.ListaConsultaBuques;
 import vos.ListaExportadorCompleto;
@@ -105,7 +110,7 @@ public class PuertoAndesMaster {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();
 		
-		jms = new JMSManager();
+		jms = new JMSManager(this);
 		jms.inicializarContexto();
 		System.out.println("Funciona");
 	}
@@ -933,7 +938,52 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public int consultarBono(String rut) throws JMSException{
+	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception{
+		ListaConsultaAreas lsa = consultarAreas(idUsuario, pb);
+		ArrayList<AreaUnificada> cu = new ArrayList<>();
+		for(ConsultaAreas ca : lsa.getAreas()){
+			cu.add(new AreaUnificada(ca.getEstado_area(), ca.getTipo_area()));
+		}
+		cu.addAll(jms.empezarRFC11().getAreas());
+		
+		return new ListaAreaUnificada(cu);
+	}
+	
+	public void actualizarExportador(String rut, int descuento) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			daoExportadores.actualizarExportador(rut, descuento);
+			
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	public int consultarBono(String rut) throws Exception{
 		return jms.empezarRF15(rut);
 	}
 	

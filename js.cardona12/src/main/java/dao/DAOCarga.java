@@ -87,7 +87,8 @@ public class DAOCarga {
 			int c = Integer.parseInt(rs.getString("COSTO"));
 			int e = Integer.parseInt(rs.getString("ID_EQUIPO"));
 			int p = Integer.parseInt(rs.getString("PESO"));
-			int a = Integer.parseInt(rs.getString("ID_AREA"));
+			String ar;
+			int a = Integer.parseInt((ar=rs.getString("ID_AREA"))!=null?ar:"0");
 			int g = Integer.parseInt(rs.getString("ID_AGENTE"));
 			
 	
