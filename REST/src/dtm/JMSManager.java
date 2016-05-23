@@ -353,12 +353,15 @@ public class JMSManager {
 
 	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
+		int numClientes = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
 		System.out.println("va a publicar RF15P1 - AN " + rut);
 		topicPublisher.publish(msg);
 		System.out.println("publico RF15P1 - AN " + rut);
 		try {
+			if(master.encontrarExportador(rut))numClientes++;
+			
 			inicializarContexto();
 
 			// Inicia sesion utilizando la conexion
@@ -369,9 +372,7 @@ public class JMSManager {
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
 
-			// Recibimos LOS mensaje
-
-			int numClientes = 0;
+			// Recibimos LOS mensajes
 
 			System.out.println("Esperando 1 mensaje RF15 - AN...");
 			Message msn = consumer.receive(5000);
@@ -387,6 +388,11 @@ public class JMSManager {
 			if (respuesta2.contains("SI"))
 				numClientes++;
 
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("ERROR : " + e.getMessage());
+		} finally {
 			System.out.println("El exportador existe en " + numClientes + " bd - AN");
 
 			switch (numClientes) {
@@ -399,13 +405,8 @@ public class JMSManager {
 			}
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			
+
 			master.actualizarExportador(rut, descuento);
-
-			cerrarConexion();
-
-		} catch (Exception e) {
-			throw e;
 		}
 		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
@@ -480,28 +481,28 @@ public class JMSManager {
 			// creado
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
+			
+			
 
 			// Recibimos LOS mensaje
-
 
 			System.out.println("Esperando 1 mensaje RFC11 - AN...");
 			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage) msn;
 			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
 
-
 			System.out.println("Esperando 2 mensaje RFC11 - AN...");
 			Message msn2 = consumer.receive(5000);
 			ObjectMessage txt2 = (ObjectMessage) msn2;
 			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
 			cerrarConexion();
-			
-			for(AreaUnificada au : respuesta1.getAreas()){
-				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+
+			for (AreaUnificada au : respuesta1.getAreas()) {
+				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
 			}
-			
-			for(AreaUnificada au : respuesta2.getAreas()){
-				unif.add(new vos.AreaUnificada(au.getEstado(),au.getTipo()));
+
+			for (AreaUnificada au : respuesta2.getAreas()) {
+				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
 			}
 
 		} catch (Exception e) {
