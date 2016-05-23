@@ -13,6 +13,7 @@
 package dtm;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -55,10 +56,28 @@ public class JMSManager
 	 * Datasource fuente de datos
 	 */
 	private DataSource ds1;
+	
+	/**
+   * Datasource fuente de datos 2
+   */
+  private DataSource ds2;
+  
+  /**
+   * Datasource fuente de datos 3
+   */
+  private DataSource ds3;
 	/**
 	 * Conexion para la base de datos 
 	 */
 	private Connection conn1;
+	/**
+   * Conexion para la base de datos 
+   */
+  private Connection conn2;
+  /**
+   * Conexion para la base de datos 
+   */
+  private Connection conn3;
 	/**
 	 * Contexto inicial
 	 */
@@ -196,7 +215,9 @@ public class JMSManager
 		try {
 
 			//inicializa datasource por jndi
-			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
+			ds1=(DataSource) context.lookup("java:jboss/datasources/XAChie1");
+			ds2=(DataSource) context.lookup("java:jboss/datasources/XAChie2");
+			ds3=(DataSource) context.lookup("java:jboss/datasources/XAChie3");
 			//accede a la cola de la web app 2
 			miCola=(Queue) context.lookup("queue/WebApp2");
 			cola1 = (Queue) context.lookup("queue/WebApp1");
@@ -383,4 +404,67 @@ public class JMSManager
 			}
 		}
 	}
+  public void twoPhaseCommitRF15(String rut) {
+    try {
+      UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+      try {
+        inicializarContexto();
+        connectXA();
+        utx.begin();
+        
+        System.out.println("Comienza 2PC-RF15");
+        try {
+          int numClientes = 0;
+          
+          for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
+            Statement st = conn.createStatement();
+            String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+            System.out.println(sql + " - JS");
+            ResultSet rs = st.executeQuery(sql);
+            if (rs.next()) { numClientes++; };
+            st.close();
+          }
+          
+          int descuento = 0;
+          
+          switch (numClientes) {
+          case 2:
+            descuento = 3;
+            break;
+          case 3:
+            descuento = 5;
+            break;
+          }
+          
+          for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
+            Statement st = conn.createStatement();
+            String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
+            System.out.println(sql);
+            int num = st.executeUpdate(sql);
+          }
+          
+          utx.commit();
+        } catch (Exception e) {
+          utx.setRollbackOnly();
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void connectXA() throws SQLException {
+    conn1 = ds1.getConnection();
+    conn2 = ds2.getConnection();
+    conn2 = ds3.getConnection();
+  }
+  
+  private void closeXA() throws SQLException {
+    conn1.close();
+    conn2.close();
+    conn3.close();
+  }
 }
