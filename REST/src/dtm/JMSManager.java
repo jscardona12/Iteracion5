@@ -360,8 +360,9 @@ public class JMSManager {
 		topicPublisher.publish(msg);
 		System.out.println("publico RF15P1 - AN " + rut);
 		try {
-			if(master.encontrarExportador(rut))numClientes++;
-			
+			if (master.encontrarExportador(rut))
+				numClientes++;
+
 			inicializarContexto();
 
 			// Inicia sesion utilizando la conexion
@@ -465,6 +466,7 @@ public class JMSManager {
 	}
 
 	public ListaAreaUnificada empezarRFC11() throws Exception {
+		MensajeAreas respuesta1 = null, respuesta2 = null;
 		ArrayList<vos.AreaUnificada> unif = new ArrayList<>();
 		Mensaje msj = new Mensaje(3, "RFC11");
 		ObjectMessage msg = ts3.createObjectMessage(msj);
@@ -481,32 +483,33 @@ public class JMSManager {
 			// creado
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
-			
-			
 
 			// Recibimos LOS mensaje
 
 			System.out.println("Esperando 1 mensaje RFC11 - AN...");
 			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage) msn;
-			MensajeAreas respuesta1 = (MensajeAreas) txt.getObject();
+			respuesta1 = (MensajeAreas) txt.getObject();
 
 			System.out.println("Esperando 2 mensaje RFC11 - AN...");
 			Message msn2 = consumer.receive(5000);
 			ObjectMessage txt2 = (ObjectMessage) msn2;
-			MensajeAreas respuesta2 = (MensajeAreas) txt2.getObject();
+			respuesta2 = (MensajeAreas) txt2.getObject();
 			cerrarConexion();
 
-			for (AreaUnificada au : respuesta1.getAreas()) {
-				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
-			}
-
-			for (AreaUnificada au : respuesta2.getAreas()) {
-				unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
-			}
-
 		} catch (Exception e) {
-			throw e;
+			System.out.println("ERROR: " + e.getMessage());
+		} finally {
+			if (respuesta1 != null) {
+				for (AreaUnificada au : respuesta1.getAreas()) {
+					unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
+				}
+			}
+			if (respuesta2 != null) {
+				for (AreaUnificada au : respuesta2.getAreas()) {
+					unif.add(new vos.AreaUnificada(au.getEstado(), au.getTipo()));
+				}
+			}
 		}
 		return new ListaAreaUnificada(unif);
 	}

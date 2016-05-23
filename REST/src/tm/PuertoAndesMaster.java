@@ -939,12 +939,15 @@ public class PuertoAndesMaster {
 	}
 	
 	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception{
-		ListaConsultaAreas lsa = consultarAreas(idUsuario, pb);
 		ArrayList<AreaUnificada> cu = new ArrayList<>();
+
+		cu.addAll(jms.empezarRFC11().getAreas());
+		
+		ListaConsultaAreas lsa = consultarAreas(idUsuario, pb);
+
 		for(ConsultaAreas ca : lsa.getAreas()){
 			cu.add(new AreaUnificada(ca.getEstado_area(), ca.getTipo_area()));
 		}
-		cu.addAll(jms.empezarRFC11().getAreas());
 		
 		return new ListaAreaUnificada(cu);
 	}
