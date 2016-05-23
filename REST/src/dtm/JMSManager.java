@@ -374,14 +374,14 @@ public class JMSManager {
 			int numClientes = 0;
 
 			System.out.println("Esperando 1 mensaje RF15 - AN...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			TextMessage txt = (TextMessage) msn;
 			String respuesta1 = txt.getText();
 			if (respuesta1.contains("SI"))
 				numClientes++;
 
 			System.out.println("Esperando 2 mensaje RF15 - AN...");
-			Message msn2 = consumer.receive();
+			Message msn2 = consumer.receive(5000);
 			TextMessage txt2 = (TextMessage) msn2;
 			String respuesta2 = txt2.getText();
 			if (respuesta2.contains("SI"))
@@ -433,18 +433,11 @@ public class JMSManager {
 	public void responderRF15(Queue cola, String rut) {
 		System.out.println("Va a responer rf15 - AN");
 		try {
-			UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
 			inicializarContexto();
-			utx.begin();
 
 			// BUSCAMOS EN LA TABLA SI EXISTE EL EXPORTADOR CON RUT PASADO POR
 			// PARAMETRO
-			Statement st = conn1.createStatement();
-			String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
-			System.out.println(sql + " - AN");
-			ResultSet rs = st.executeQuery(sql);
-			boolean existe = rs.next();
-			st.close();
+			boolean existe = master.encontrarExportador(rut);
 			// **********************************************************************
 
 			// Inicia sesion utilizando la conexion

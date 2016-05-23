@@ -983,6 +983,44 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
+	
+	public boolean encontrarExportador(String rut) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		boolean existe = false;
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			existe = daoExportadores.existeExportador(rut);
+			
+			daoExportadores.cerrarRecursos();
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return existe;
+	}
+	
 	public int consultarBono(String rut) throws Exception{
 		return jms.empezarRF15(rut);
 	}
