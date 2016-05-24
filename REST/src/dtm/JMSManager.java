@@ -740,8 +740,7 @@ public class JMSManager {
 				// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
 				// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
 				// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
-				ListaExportadorUnificado lista = master.consultarCostos(
-						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
+				ListaExportadorUnificado lista = master.consultarCostos(fechas);
 				// *************************************************************
 				
 				ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
