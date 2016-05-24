@@ -145,7 +145,7 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 		prepStmt.executeQuery();
 	}
 	public boolean existeExportador(String rut) throws SQLException {
-		String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
+		String sql = "SELECT * FROM EXPORTADORES WHERE RUT = '" + rut+"'";
 		System.out.println(sql);
 		PreparedStatement prepStmt = conn.prepareStatement(sql);
 		recursos.add(prepStmt);
