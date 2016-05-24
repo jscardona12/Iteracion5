@@ -92,7 +92,7 @@ public class DAOTablaBuques {
 	}
 
 	public Buque buscarBuquePorId(int id) throws NumberFormatException, SQLException {
-		String sql = "SELECT * FROM BUQUES2 WHERE ID=" + id;
+		String sql = "SELECT * FROM BUQUES WHERE ID=" + id;
 
 		PreparedStatement prepStmt = conn.prepareStatement(sql);
 		recursos.add(prepStmt);
@@ -101,7 +101,7 @@ public class DAOTablaBuques {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			int capacidad = Integer.parseInt(rs.getString("CAPACIDAD"));
+			int capacidad = (int)Double.parseDouble(rs.getString("CAPACIDAD"));
 			String nombre = rs.getString("NOMBRE");
 			String nombre_agente = rs.getString("NOMBRE_AGENTE");
 			String idT = rs.getString("ID_TERMINAL");

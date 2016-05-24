@@ -2,6 +2,7 @@ package rest;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -15,6 +16,7 @@ import vos.ListaExportadorCompleto;
 import vos.ListaExportadorUnificado;
 import vos.ListaRegistroBuques;
 import vos.ParametroBusqueda;
+import vos.RespuestaDescuento;
 @Path("exportadores")
 public class PuertoAndesExportadoresService {
 
@@ -35,6 +37,21 @@ public class PuertoAndesExportadoresService {
 	
 	private String doErrorMessage(Exception e){
 		return "{ \"ERROR\": \""+ e.getMessage() + "\"}" ;
+	}
+	
+	@GET
+	@Path("/bono2/{rut}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarCostos(@javax.ws.rs.PathParam("rut") String rut) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		RespuestaDescuento lista;
+		try {
+			lista = tm.darDescuentoExportador2PC(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
 	}
 	
 	@PUT
