@@ -38,6 +38,7 @@ import vos.ListaAreaUnificada;
 import vos.ListaExportadorUnificado;
 import vos.OperadorPortuario;
 import vos.ParametroBusqueda;
+import vos.RespuestaDescuento;
 import vos.Salida;
 import vos.respConsultaBarcos;
 
@@ -416,6 +417,21 @@ public class PuertoAndesOperadoresServices {
 		}
 		return Response.status(200).entity(lista).build();
 	}
+	@GET
+	@Path("/bono2/{rut}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarCostos(@javax.ws.rs.PathParam("rut") String rut) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		RespuestaDescuento lista;
+		try {
+			lista = tm.darDescuentoExportador2PC(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
+	}
+	
 	
 	@POST
 	@Path("/consultar_distr")
@@ -432,6 +448,7 @@ public class PuertoAndesOperadoresServices {
 		return Response.status(200).entity(lca).build();
 	}
 
+	
 }
 
 

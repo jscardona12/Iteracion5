@@ -1867,5 +1867,21 @@ public class PuertoAndesMaster {
 		}
 		return new ListaExportadorUnificado(ex);
 	}
+	
+	  public RespuestaDescuento darDescuentoExportador2PC(String rut) {
+		    int desc = jms.twoPhaseCommitRF15(rut);
+		    RespuestaDescuento res = new RespuestaDescuento();
+		    if(desc != 0) {
+		      res.setSuccess(true);
+		      res.setMessage("Se realizó el descuento correctamente");
+		      res.setDescuento(desc);
+		    } else {
+		      res.setSuccess(false);
+		      res.setMessage("No se encuentra el exportador.");
+		      res.setDescuento(desc);
+		    }
+		    return res;
+		  }
+
 }
 
