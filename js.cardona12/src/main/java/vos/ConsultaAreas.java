@@ -71,6 +71,11 @@ public class ConsultaAreas
 		this.capacidad = capacidad;
 	}
 
+	public ConsultaAreas(int i, int idCarga2, Date date, Date date2, String tipo2, String estado2, int costo2,
+			int deshabilitado2, int capacidad2) {
+		// TODO Auto-generated constructor stub
+	}
+
 	public String getFES() {
 		return FES;
 	}

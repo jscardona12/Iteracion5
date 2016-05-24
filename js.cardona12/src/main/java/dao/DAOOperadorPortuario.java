@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.jboss.resteasy.plugins.delegates.NewCookieHeaderDelegate;
+
 import dtm.CargaUnificada;
 import vos.Barco;
 import vos.Carga;
@@ -1991,7 +1993,7 @@ public class DAOOperadorPortuario {
 		double count = 0;
 		if(tipo.equalsIgnoreCase("CONTENEDORES") || tipo.equalsIgnoreCase("CONTENEDOR"))
 		{
-			String sql2 = "SELECT COUNT(BODEGAS.AREAS) AS CUENTA "
+			String sql2 = "SELECT COUNT(BODEGAS.AREA) AS CUENTA "
 					+ "FROM BODEGAS ";
 			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
 			recursos.add(prepStmt2);
@@ -2005,7 +2007,7 @@ public class DAOOperadorPortuario {
 		
 		else if(tipo.equalsIgnoreCase("VEHICULOS"))
 		{
-			String sql2 = "SELECT COUNT(PATIOS.AREAS) AS CUENTA "
+			String sql2 = "SELECT COUNT(PATIOS.AREA) AS CUENTA "
 					+ "FROM PATIOS";
 			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
 			recursos.add(prepStmt2);
@@ -2019,7 +2021,7 @@ public class DAOOperadorPortuario {
 		
 		else if(tipo.equalsIgnoreCase("BIOTIPOS"))
 		{
-			String sql2 = "SELECT COUNT(COBERTIZOS.AREAS) AS CUENTA "
+			String sql2 = "SELECT COUNT(COBERTIZOS.AREA) AS CUENTA "
 					+ "FROM COBERTIZOS";
 			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
 			recursos.add(prepStmt2);
@@ -2045,4 +2047,34 @@ public class DAOOperadorPortuario {
 		return count;
 	}
 	
+	public ArrayList<ConsultaAreas> getArea1()
+	{
+		ArrayList<ConsultaAreas> con = new ArrayList<ConsultaAreas>();
+		for(int i = 0; i<10;i++)
+		{
+			int q = (int) (0 + (Math.random() * 2));
+			String Estado = "";
+			String Tipo = "";
+			if(q==0)
+			{
+				Estado = "Disponible";//, 'Reservado', 'Mantenimiento'}
+				Tipo ="Contenedor";
+			}
+			else if(q==1)
+			{
+				Estado = "Reservado";//, 'Reservado', 'Mantenimiento'}
+				Tipo ="Vahiculo";
+			}
+			else if(q==2)
+			{
+				Estado = "Mantenimiento";//, 'Reservado', 'Mantenimiento'}
+				Tipo ="Granel";
+			}
+			ConsultaAreas a = new ConsultaAreas(i, i+2, new Date(10239043000000L), new Date(102390442095230L), Tipo, Estado, 100000, 0, 10000000);
+			con.add(a);
+		}
+		
+		return con;
+		
+	}
 }

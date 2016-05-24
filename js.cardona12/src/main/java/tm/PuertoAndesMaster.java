@@ -815,7 +815,7 @@ public class PuertoAndesMaster {
 		}
 	}
 	
-	public ArrayList<ConsultaAreas> darMovimientosArea(int idAgente) throws Exception {
+	public ArrayList<ConsultaAreas> darMovimientosArea() throws Exception {
 		DAOOperadorPortuario daoOperador = new DAOOperadorPortuario();
 		ArrayList<ConsultaAreas> resp = new ArrayList<ConsultaAreas>();
 		try 
@@ -823,7 +823,7 @@ public class PuertoAndesMaster {
 			//////Transacción
 			this.conn = darConexion();
 			daoOperador.setConn(conn);
-			resp =daoOperador.getAreas(idAgente);
+			resp =daoOperador.getArea1();
 			conn.commit();
 			return resp;
 

@@ -629,7 +629,7 @@ public class PuertoAndesQueue
 		// IMPLEMENTADO DE RFC6 Y CONVIERTEN LAS
 		// AREAS A LAS AREAS ESTANDAR.
 		
-		List<ConsultaAreas> areas = master.darMovimientosArea(-1);
+		List<ConsultaAreas> areas = master.darMovimientosArea();
 		ArrayList<AreaUnificada> areasUnificadas = new ArrayList<>();
 		for (ConsultaAreas a : areas) {
 			areasUnificadas.add(new AreaUnificada(a.getSEstado(), a.getTipo()));
