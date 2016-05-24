@@ -299,7 +299,7 @@ public class JMSManager
 
 			//Recibimos un mensaje
 			System.out.println("PuertoAndes0206 - Esperando mensaje...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			TextMessage txt = (TextMessage)msn;
 			String porInsertar = txt.getText();
 			System.out.println("PuertoAndes0206 - Recibido..."+porInsertar);
@@ -360,14 +360,14 @@ public class JMSManager
 			int numClientes = 0;
 
 			System.out.println("Esperando 1 mensaje RF15 - jdf...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			TextMessage txt = (TextMessage) msn;
 			String respuesta1 = txt.getText();
 			if (respuesta1.contains("SI"))
 				numClientes++;
 
 			System.out.println("Esperando 2 mensaje RF15 - jdf...");
-			Message msn2 = consumer.receive();
+			Message msn2 = consumer.receive(5000);
 			TextMessage txt2 = (TextMessage) msn2;
 			String respuesta2 = txt2.getText();
 			if (respuesta2.contains("SI"))
@@ -415,7 +415,7 @@ public class JMSManager
 
 			//Recibimos un mensaje
 			System.out.println("PuertoAndes0206 - Esperando mensaje...");
-			Message msn = consumer.receive();
+			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage)msn;
 			Mensaje mensaje= (Mensaje)txt.getObject();
 			double capacidad1=0,capacidad3=0;
@@ -425,7 +425,7 @@ public class JMSManager
 				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
 			System.out.println("recibe primera capacidad "+capacidad1+" - "+capacidad3);
-			msn = consumer.receive();
+			msn = consumer.receive(5000);
 			txt = (ObjectMessage)msn;
 			mensaje= (Mensaje)txt.getObject();
 			if(mensaje.getNumPuerto()==1){
@@ -506,7 +506,7 @@ public class JMSManager
 
 				//Recibimos un mensaje
 				System.out.println("PuertoAndes0206 - Esperando mensaje...");
-				Message msn = consumer.receive();
+				Message msn = consumer.receive(5000);
 				ObjectMessage txt = (ObjectMessage)msn;
 				MensajeCargas porInsertar = (MensajeCargas)txt.getObject();
 				System.out.println("PuertoAndes0206 - Recibido..."+porInsertar.getMensaje());
