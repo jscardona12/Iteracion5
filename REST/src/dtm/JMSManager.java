@@ -299,18 +299,23 @@ public class JMSManager {
 		}
 	}
 
-	public void empezarRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB) throws Exception{
+	public boolean empezarRF14(ArrayList<CargaUnificada> cargas) throws Exception{
 		if(cargas.size()==0)throw new Exception("no hay cargas");
+		double suma=0;
+		for(CargaUnificada c:cargas){
+			suma+=c.getVolumen();
+		}
+		System.out.println("suma:"+suma + " - AN");
 		MensajeCargas mensaje = new MensajeCargas(2, "RF14-"+cargas.get(0).getTipo(), cargas);
 		ObjectMessage tm = ts2.createObjectMessage(mensaje);
 		topicPublisher.publish(tm);
-		System.out.println("bien");
-		recibirRF14(cargas, cargaMia, idB);
-
+		System.out.println("Se publico RF14 - AN");
+		return recibirRF14(cargas);
 	}
 	
-	public void recibirRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB){
+	public boolean recibirRF14(ArrayList<CargaUnificada> cargas){
 		try{
+			System.out.println("se prepara para recibir respuestas");
 			inicializarContexto();
 
 			//Inicia sesion utilizando la conexion
@@ -321,8 +326,8 @@ public class JMSManager {
 			conm.start();
 
 			//Recibimos un mensaje
-			System.out.println("PuertoAndes3 - Esperando mensaje...");
-			Message msn = consumer.receive();
+			System.out.println("PuertoAndes0206 - Esperando mensaje...");
+			Message msn = consumer.receive(5000);
 			ObjectMessage txt = (ObjectMessage)msn;
 			Mensaje mensaje= (Mensaje)txt.getObject();
 			double capacidad1=0,capacidad3=0;
@@ -331,7 +336,8 @@ public class JMSManager {
 			}else{
 				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
-			msn = consumer.receive();
+			System.out.println("recibe primera capacidad "+capacidad1+" - "+capacidad3);
+			msn = consumer.receive(5000);
 			txt = (ObjectMessage)msn;
 			mensaje= (Mensaje)txt.getObject();
 			if(mensaje.getNumPuerto()==1){
@@ -339,6 +345,7 @@ public class JMSManager {
 			}else{
 				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
+			System.out.println("recibe segunda capacidad "+capacidad1+" - "+capacidad3);
 			
 			ArrayList<CargaUnificada> cargasPara1=new ArrayList<>();
 			ArrayList<CargaUnificada> cargasPara3=new ArrayList<>();
@@ -357,34 +364,42 @@ public class JMSManager {
 			}
 			if(!sePuede){
 				MessageProducer producer = session.createProducer(cola1);
-				ObjectMessage message = session.createObjectMessage( new MensajeCargas(3, "CANCEL", null) );
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+
+				System.out.println("va a mandar objeto CANCEL");
 				producer.send(message);
 				producer = session.createProducer(cola2);
-				message = session.createObjectMessage( new MensajeCargas(3, "CANCEL", null) );
+				message = session.createObjectMessage( new MensajeCargas(2, "CANCEL", null) );
+
+				System.out.println("va a mandar objeto CANCEL");
 				producer.send(message);
 			}else{
 				MessageProducer producer = session.createProducer(cola1);
-				ObjectMessage message = session.createObjectMessage( new MensajeCargas(3, "OK", cargasPara1) );
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(2, "OK", cargasPara1) );
+
+				System.out.println("va a mandar objeto ok");
 				producer.send(message);
 				producer = session.createProducer(cola2);
-				message = session.createObjectMessage( new MensajeCargas(3, "OK", cargasPara3) );
+				message = session.createObjectMessage( new MensajeCargas(2, "OK", cargasPara3) );
+
+				System.out.println("va a mandar objeto ok");
 				producer.send(message);
-//				videoMaster.terminarRF14(cargaMia, idB); TRANS PROPIA: TERMINAR DE BAJAR LA CARGA DEL BUQUE
+				
+				return true;
 			}
-			
-			cerrarConexion();
 
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		return false;
 	}
 
 	public void responderRF14(Queue cola, String tipo){
 		System.out.println("Va a responer rf14");
 		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
-		int libre=1000; //CAMBIAR
+		int libre;
 		try {
-//			libre = videoMaster.getAlmacenamientoLibre(tipo);
+			libre = master.getAlmacenamientoLibre(tipo);
 
 			//fin transaccion propia
 			try{
@@ -395,24 +410,24 @@ public class JMSManager {
 
 				//Crea una sesion para producir mensajes hacia la cola destino
 				MessageProducer producer = session.createProducer(cola);
-				ObjectMessage message = session.createObjectMessage( new Mensaje(3, libre+"") );
+				ObjectMessage message = session.createObjectMessage( new Mensaje(2, libre+"") );
 				producer.send(message);
-				System.out.println("PuertoAndes 3 - Se envi�: "+libre);
+				System.out.println("PuertoAndes 0206 - Se envi�: "+libre);
 
 				//Crea una sesion para recibir mensajes
 				MessageConsumer consumer = session.createConsumer(miCola);
 				conm.start();
 
 				//Recibimos un mensaje
-				System.out.println("PuertoAndes3 - Esperando mensaje...");
+				System.out.println("PuertoAndes0206 - Esperando mensaje...");
 				Message msn = consumer.receive();
 				ObjectMessage txt = (ObjectMessage)msn;
 				MensajeCargas porInsertar = (MensajeCargas)txt.getObject();
-				System.out.println("PuertoAndes3 - Recibido..."+porInsertar.getMensaje());
+				System.out.println("PuertoAndes0206 - Recibido..."+porInsertar.getMensaje());
 
 				//TRANSACCION PROPIA: insertar cargas en bd
 				if(!porInsertar.getMensaje().equals("CANCEL")){
-//					videoMaster.insertarCargas(porInsertar.getCargas());
+					master.insertarCargas(porInsertar.getCargas());
 				}
 
 				cerrarConexion();

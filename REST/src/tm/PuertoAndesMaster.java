@@ -94,7 +94,7 @@ public class PuertoAndesMaster {
 	private Connection conn;
 
 	private static int auxId;
-	
+
 	private JMSManager jms;
 
 	/**
@@ -111,7 +111,7 @@ public class PuertoAndesMaster {
 		auxId = 5000;
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
 		initConnectionData();
-		
+
 		jms = new JMSManager(this);
 		jms.inicializarContexto();
 		System.out.println("Funciona");
@@ -455,22 +455,22 @@ public class PuertoAndesMaster {
 			return cargasHuerfanas;
 		}
 	}
-	
-	public ListaConsultaAreas consultarAreas(int idUsuario, ParametroBusqueda pb) throws Exception{
+
+	public ListaConsultaAreas consultarAreas(int idUsuario, ParametroBusqueda pb) throws Exception {
 		DAOTablaCargas daoCargas = new DAOTablaCargas();
 		DAOTablaUsuarios daoUsuarios = new DAOTablaUsuarios();
 		try {
 			this.conn = darConexion();
 			conn.setAutoCommit(true);
-			
+
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("ADMINISTRADOR"))
 				throw new Exception("No se tienen los privilegios para realizar esta acci�n.");
-			
+
 			daoCargas.setConn(conn);
 			return daoCargas.consultarAreas(pb);
-			
+
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -492,27 +492,27 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
-	
-	public ListaMovimientoCargas consultarMovimientoCargas(int idUsuario, ParametroBusqueda pb) throws Exception{
+
+	public ListaMovimientoCargas consultarMovimientoCargas(int idUsuario, ParametroBusqueda pb) throws Exception {
 		DAOTablaCargas daoCargas = new DAOTablaCargas();
 		DAOTablaUsuarios daoUsuarios = new DAOTablaUsuarios();
 		try {
 			this.conn = darConexion();
 			conn.setAutoCommit(true);
-			
+
 			daoUsuarios.setConn(conn);
 			Usuario usuario = daoUsuarios.buscarUsuarioPorId(idUsuario);
 			if (!usuario.getTipo().equals("CLIENTE") && !usuario.getTipo().equals("ADMINISTRADOR"))
 				throw new Exception("No se tienen los privilegios para realizar esta acci�n.");
-			
+
 			daoCargas.setConn(conn);
-			if(usuario.getTipo().equals("CLIENTE"))
+			if (usuario.getTipo().equals("CLIENTE"))
 				return daoCargas.consultarMovimientoCargas(pb, idUsuario);
-			else if(usuario.getTipo().equals("ADMINISTRADOR"))
+			else if (usuario.getTipo().equals("ADMINISTRADOR"))
 				return daoCargas.consultarMovimientoCargas(pb);
 			else
 				return null;
-			
+
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -853,10 +853,144 @@ public class PuertoAndesMaster {
 		}
 	}
 	
+	public void insertarCargas(ArrayList<CargaUnificada> cargas) throws Exception{
+		ArrayList<Carga> convertir = new ArrayList<>();
+		DAOTablaCargas daoCargas = new DAOTablaCargas();
+		DAOTablaBuques daoBuques = new DAOTablaBuques();
+		DAOTablaAreasAlmacenamiento daoAA = new DAOTablaAreasAlmacenamiento();
+		DAOTablaRegistroCargas daoRegistroCargas = new DAOTablaRegistroCargas();
+		DAOTablaRegistroAlmacenamiento daoRA = new DAOTablaRegistroAlmacenamiento();
+		try {
+			
+			double capacidadNecesitada = 0;
+			int j = 0;
+			for (CargaUnificada c : cargas){
+				convertir.add(new Carga(11000000+ j,c.getTipo(),c.getPeso(),c.getVolumen(),0,0,0,0,"Puerto Andes","Puerto Andes","CARGADO"));
+				capacidadNecesitada += c.getVolumen();
+				j++;
+			}
+			// busco areas de almacenamiento que tengan el tipo igual al tipo de
+			// la carga y la capacidad.
+			daoAA.setConn(conn);
+			ArrayList<AreaAlmacenamiento> list = (ArrayList<AreaAlmacenamiento>) daoAA
+					.buscarAreaParaCargas(cargas.get(0).getTipo(), capacidadNecesitada);
+
+			// Busco un area de mantenimiento que
+			// no est� reservada en la fecha que se va a descargar.
+			daoRA.setConn(conn);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			String date = sdf.format(new Date());
+			AreaAlmacenamiento aaEscogida = null;
+			System.out.println("Hay " + list.size() + " Area de almacenamiento para verificar");
+			for (AreaAlmacenamiento aa : list) {
+				if (!daoRA.existeRegistroReserva(aa.getId(), date)
+						&& !(aa.getEstado() != null && aa.getEstado().equals("RESERVADA"))) {
+					aaEscogida = aa;
+					break;
+				}
+			}
+
+			if (aaEscogida == null)
+				return;
+
+			// Se reserva el area de almacenamiento. Se cambio el estado del
+			// area a reservada y se crea un registro.
+			aaEscogida.setEstado("RESERVADA");
+			daoAA.updateArea(aaEscogida);
+			daoRA.addRegistro(new RegistroAlmacenamiento(auxId++ + 100, date, "'RESERVA'", aaEscogida.getId()));
+
+			// busca el buque que va a ser cargado, lo pone en proceso de
+			// descarga si es posible.
+			daoBuques.setConn(conn);
+			
+
+			daoRegistroCargas.setConn(conn);
+			Iterator<Carga> i = convertir.iterator();
+			aaEscogida.setDimension(aaEscogida.getDimension() - capacidadNecesitada);
+			while (i.hasNext()) {
+				System.out.println("entro al loop");
+				Carga c = i.next();
+
+				c.setId_almacenamiento(aaEscogida.getId());
+				daoCargas.addCarga(c);
+				conn.setSavepoint();
+			}
+			daoAA.updateArea(aaEscogida);
+
+			aaEscogida.setEstado("DISPONIBLE");
+			daoAA.updateArea(aaEscogida);
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			daoCargas.cerrarRecursos();
+			daoBuques.cerrarRecursos();
+			daoAA.cerrarRecursos();
+			daoRA.cerrarRecursos();
+			daoRegistroCargas.cerrarRecursos();
+		}
+	}
+
+	public int getAlmacenamientoLibre(String tipo) throws Exception {
+		DAOTablaAreasAlmacenamiento daoAA = new DAOTablaAreasAlmacenamiento();
+		int capacidad = 0;
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+			// busco areas de almacenamiento que tengan el tipo igual al tipo de
+			// la carga y la capacidad.
+			daoAA.setConn(conn);
+			ArrayList<AreaAlmacenamiento> list = (ArrayList<AreaAlmacenamiento>) daoAA
+					.buscarAreaTotal(tipo);
+
+			// Busco un area de mantenimiento que
+			// no est� reservada en la fecha que se va a descargar.
+			System.out.println("Hay " + list.size() + " Area de almacenamiento para verificar");
+			for (AreaAlmacenamiento aa : list) {
+				if (!(aa.getEstado() != null && aa.getEstado().equals("RESERVADA"))) {
+					if(capacidad < aa.getDimension()){
+						capacidad = (int) aa.getDimension();
+					}
+				}
+			}
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoAA.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return capacidad;
+	}
+
 	public void iniciarRF14(RegistroBuque rb) throws Exception {
 		DAOTablaBuques daoBuques = new DAOTablaBuques();
 		DAOTablaUsuarios daoUsuarios = new DAOTablaUsuarios();
 		DAOTablaCargas daoCargas = new DAOTablaCargas();
+		boolean sePuede = false;
 		ArrayList<Carga> cargasHuerfanas = new ArrayList<Carga>();
 		try {
 			this.conn = darConexion();
@@ -867,7 +1001,6 @@ public class PuertoAndesMaster {
 			if (!usuario.getTipo().equals("OPERADOR") && !usuario.getTipo().equals("ADMINISTRADOR"))
 				throw new Exception("No se tienen los privilegios para realizar esta acci�n.");
 
-			// SE ACTUALIZA EL ESTADO DEL BUQUE.
 			daoBuques.setConn(conn);
 			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
 
@@ -888,33 +1021,21 @@ public class PuertoAndesMaster {
 
 			// Las cargas cuyo ID DE ALMAC buque sigan estando en null fueron
 			// las que no se pudieron reubicar en areas de almacenamiento.
-			ArrayList<Buque> bDisponibles = new ArrayList<>();
-			if (!listaCarga.isEmpty()) {
-				bDisponibles = (ArrayList<Buque>) daoBuques.getBuquesDisponibles(buque.getTipo(),
-						listaCarga.get(0).getPuerto_destino());
-			}
+
 			for (Carga c : listaCarga) {
 				Carga temp = daoCargas.buscarCargaPorId(c.getId());
-				temp.setId_buque(-1);
-				daoCargas.updateCarga(temp);
 				if (temp.getId_almacenamiento() == -1) {
-					for (Buque bb : bDisponibles) {
-						if (bb.getId() == buque.getId())
-							continue;
-						if (bb.getCapacidad() > temp.getPeso()) {
-							temp.setId_buque(bb.getId());
-							daoCargas.updateCarga(temp);
-						}
-					}
-					if (temp.getId_buque() == -1)
-						cargasHuerfanas.add(temp);
+					cargasHuerfanas.add(temp);
 				}
 			}
-			if(!cargasHuerfanas.isEmpty()){
-				jms.empezarRF14(estandarizarCargas(cargasHuerfanas),null,rb.getId_buque());
+			if (!cargasHuerfanas.isEmpty()) {
+				sePuede = jms.empezarRF14(estandarizarCargas(cargasHuerfanas));
 			}
-			
-			conn.commit();
+
+			if (sePuede)
+				conn.commit();
+			else
+				throw new Exception("No se puede");
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -939,38 +1060,38 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
-	
-	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception{
+
+	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception {
 		ArrayList<AreaUnificada> cu = new ArrayList<>();
 
 		cu.addAll(jms.empezarRFC11().getAreas());
-		
+
 		ListaConsultaAreas lsa = consultarAreas(idUsuario, pb);
 
-		for(ConsultaAreas ca : lsa.getAreas()){
+		for (ConsultaAreas ca : lsa.getAreas()) {
 			cu.add(new AreaUnificada(ca.getEstado_area(), ca.getTipo_area()));
 		}
-		
+
 		return new ListaAreaUnificada(cu);
 	}
-	
-	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception{
+
+	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception {
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
-		ArrayList <ExportadorUnificado> ex = new ArrayList<>();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
 		try {
 			this.conn = darConexion();
 
 			daoExportadores.setConn(conn);
-			
+
 			String rango = "";
-			for(String s : pb.getWhere()){
+			for (String s : pb.getWhere()) {
 				rango += s;
 			}
-						
+
 			ex.addAll(daoExportadores.costoExportadores(rango));
-						
+
 			daoExportadores.cerrarRecursos();
-			
+
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -994,26 +1115,26 @@ public class PuertoAndesMaster {
 		}
 		return new ListaExportadorUnificado(ex);
 	}
-	
-	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception{
+
+	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception {
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
-		ArrayList <ExportadorUnificado> ex = new ArrayList<>();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
 		try {
 			this.conn = darConexion();
 
 			daoExportadores.setConn(conn);
-			
+
 			String rango = "";
-			for(String s : pb.getWhere()){
+			for (String s : pb.getWhere()) {
 				rango += s + " ";
 			}
-			
+
 			ex.addAll(jms.empezarRFC12(rango));
-			
+
 			ex.addAll(daoExportadores.costoExportadores(rango));
-						
+
 			daoExportadores.cerrarRecursos();
-			
+
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -1037,16 +1158,16 @@ public class PuertoAndesMaster {
 		}
 		return new ListaExportadorUnificado(ex);
 	}
-	
-	public void actualizarExportador(String rut, int descuento) throws SQLException{
+
+	public void actualizarExportador(String rut, int descuento) throws SQLException {
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
 		try {
 			this.conn = darConexion();
 
 			daoExportadores.setConn(conn);
-			
+
 			daoExportadores.actualizarExportador(rut, descuento);
-						
+
 			daoExportadores.cerrarRecursos();
 
 		} catch (SQLException e) {
@@ -1071,8 +1192,8 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
-	
-	public boolean encontrarExportador(String rut) throws SQLException{
+
+	public boolean encontrarExportador(String rut) throws SQLException {
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
 		boolean existe = false;
 		try {
@@ -1080,11 +1201,11 @@ public class PuertoAndesMaster {
 			conn.setAutoCommit(false);
 
 			daoExportadores.setConn(conn);
-			
+
 			existe = daoExportadores.existeExportador(rut);
-			
+
 			daoExportadores.cerrarRecursos();
-			
+
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
 			e.printStackTrace();
@@ -1108,15 +1229,15 @@ public class PuertoAndesMaster {
 		}
 		return existe;
 	}
-	
-	public int consultarBono(String rut) throws Exception{
+
+	public int consultarBono(String rut) throws Exception {
 		return jms.empezarRF15(rut);
 	}
-	
-	private ArrayList<CargaUnificada> estandarizarCargas(ArrayList<Carga> cargas){
+
+	private ArrayList<CargaUnificada> estandarizarCargas(ArrayList<Carga> cargas) {
 		ArrayList<CargaUnificada> cargasUnificadas = new ArrayList<>();
-		for(Carga c : cargas){
-			cargasUnificadas.add(new CargaUnificada(c.getPeso(),c.getVolumen(), c.getTipo(), 1000));
+		for (Carga c : cargas) {
+			cargasUnificadas.add(new CargaUnificada(c.getPeso(), c.getVolumen(), c.getTipo(), 1000));
 		}
 		return cargasUnificadas;
 	}

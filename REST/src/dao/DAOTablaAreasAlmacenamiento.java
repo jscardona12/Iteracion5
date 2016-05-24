@@ -115,6 +115,26 @@ public class DAOTablaAreasAlmacenamiento {
 		return list;
 	}
 	
+	public List<AreaAlmacenamiento> buscarAreaTotal(String tipo) throws SQLException{
+		String sql = "SELECT * FROM AREAS_ALMACENAMIENTO WHERE TIPO = '" + tipo
+				+ "' AND ESTADO = 'DISPONIBLE'";
+		ArrayList<AreaAlmacenamiento> list = new ArrayList<>();
+		System.out.println("SQL stmt:" + sql);
+		
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = 	prepStmt.executeQuery();
+		
+		while (rs.next()) {
+			int id1 = Integer.parseInt(rs.getString("ID"));
+			double dimension = Double.parseDouble(rs.getString("DIMENSION"));
+			String estado = rs.getString("ESTADO");
+			String tipo1 = rs.getString("TIPO");
+			list.add(new AreaAlmacenamiento(-1,id1, dimension, estado, tipo1));
+		}
+		return list;
+	}
+	
 	public void updateArea(AreaAlmacenamiento aa) throws SQLException{
 		String sql = "UPDATE AREAS_ALMACENAMIENTO SET "
 				+ "DIMENSION = " + aa.getDimension() + ","
