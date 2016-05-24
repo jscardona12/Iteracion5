@@ -1806,7 +1806,8 @@ public class PuertoAndesMaster {
 	public int inicarRF15(String rut) throws Exception {
 		return jms.empezarRF15(rut);
 	}
-	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception {
+	
+	public ListaAreaUnificada rfc11() throws Exception {
 		ArrayList<AreaUnificada> cu = new ArrayList<>();
 
 		cu.addAll(jms.empezarRFC11().getAreas());
