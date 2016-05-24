@@ -2276,6 +2276,7 @@ public class VideoAndesMaster {
 		DAOTablaAlmacenamiento daoAlmacenamiento = new DAOTablaAlmacenamiento();
 		try 
 		{
+			this.conn=darConexion();
 			daoAlmacenamiento.setConn(conn);
 			resp = daoAlmacenamiento.consultarAlmacenamientos(0, null);
 
