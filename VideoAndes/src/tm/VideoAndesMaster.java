@@ -16,27 +16,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Savepoint;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-
-import javax.activation.DataSource;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.transaction.UserTransaction;
 
 import dao.DAOTablaAlmacenDeshabilitado;
 import dao.DAOTablaAlmacenamiento;
@@ -67,7 +51,6 @@ import dao.DAOTablaVideos;
 import dtm.CargaUnificada;
 import dtm.JMSManager;
 import exception.BuqueDeshabilitadoException;
-import vos.Video;
 import vos.Almacenamiento;
 import vos.AreaUnificada;
 import vos.Arribo;
@@ -78,6 +61,7 @@ import vos.CargaEnAlmacen;
 import vos.Cobertizo;
 import vos.ConsultaUsuario;
 import vos.Exportador;
+import vos.ExportadorUnificado;
 import vos.Factura;
 import vos.Importador;
 import vos.InfoExportador;
@@ -86,6 +70,7 @@ import vos.ListaAreaUnificada;
 import vos.ListaArribos;
 import vos.ListaArribosYSalidas;
 import vos.ListaBuques;
+import vos.ListaExportadorUnificado;
 import vos.ListaExportadores;
 import vos.ListaImportadores;
 import vos.ListaMovimientoAlmacen;
@@ -93,7 +78,6 @@ import vos.ListaMovimientoCarga2;
 import vos.ListaMuelles;
 import vos.ListaSalidas;
 import vos.ListaTipoCarga;
-import vos.ListaVideos;
 import vos.MovimientoCarga;
 import vos.Muelle;
 import vos.ParametroBusqueda;
@@ -2242,6 +2226,49 @@ public class VideoAndesMaster {
 
 
 
+	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception {
+		DAOTablaExportador daoExportadores = new DAOTablaExportador();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+
+			String rango = "";
+			for (String s : pb.getWhere()) {
+				rango += s + " ";
+			}
+
+			ex.addAll(jms.empezarRFC12(rango));
+
+			ex.addAll(daoExportadores.costoExportadores(rango));
+
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
+	}
+	
 
 	public int getAlmacenamientoLibre(String tipo) throws Exception {
 		ListaAlmacenamientos resp = null;
@@ -2531,5 +2558,49 @@ public class VideoAndesMaster {
 				throw exception;
 			}
 		}
+	}
+
+
+
+
+	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception {
+		DAOTablaExportador daoExportadores = new DAOTablaExportador();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+
+			String rango = "";
+			for (String s : pb.getWhere()) {
+				rango += s;
+			}
+
+			ex.addAll(daoExportadores.costoExportadores(rango));
+
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
 	}
 }

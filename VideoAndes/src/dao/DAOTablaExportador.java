@@ -16,10 +16,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 
 import vos.Carga;
 import vos.Exportador;
+import vos.ExportadorUnificado;
 import vos.InfoExportador;
 import vos.ListaCargas;
 
@@ -57,14 +59,14 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 						+restriccionBuque+restriccionFechaI+restriccionFechaF+
 						" group by c.ID_EXPORTADOR)car, EXPORTADORES exp, PERSONAS pe, MOVIMIENTOMARITIMO mm, BUQUES b, CARGA c "+
 						"WHERE exp.ID=pe.ID AND c.id=mm.ID_CARGA AND mm.ID_BUQUE=b.ID AND c.ID_EXPORTADOR=exp.ID AND exp.ID="+id_exportador+restriccionBuque+restriccionNatural+restriccionFechaI+restriccionFechaF+restOrden;
-		
+
 		System.out.println(sql);
-//		if(true) throw new Exception(sql);
+		//		if(true) throw new Exception(sql);
 		PreparedStatement prepStmt = conn.prepareStatement(sql);
 		recursos.add(prepStmt);
 		ResultSet rs = prepStmt.executeQuery();
 		ArrayList<Carga> cargas = new ArrayList<Carga>();
-		
+
 		int i=0;
 		while (rs.next()) {
 			if(i==0){
@@ -75,7 +77,7 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 				int cantidadUso = Integer.parseInt(rs.getString("CANTUSO"));
 				ie=new InfoExportador(nombre, id, esNatural, rut, cantidadUso);
 			}
-			
+
 			String destino = rs.getString("DESTINO");
 			String tipo = rs.getString("TIPO");
 			int id = Integer.parseInt(rs.getString("ID"));
@@ -88,7 +90,7 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
 			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
-		
+
 			i++;
 		}
 		if(ie!=null)ie.setCargas(new ListaCargas(cargas));
@@ -151,4 +153,26 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 		recursos.add(prepStmt);
 		return prepStmt.executeQuery().next();
 	}
+	public ArrayList<ExportadorUnificado> costoExportadores(String fechas) throws SQLException{
+		ArrayList<ExportadorUnificado> eu = new ArrayList<>();
+		String sql = "select NOMBRE, COSTO FROM"
+				+" (SELECT NOMBRE, ID FROM PERSONAS, FACTURAS"
+				+" WHERE ID_EXPORTADOR=ID),"
+				+"(SELECT ID_EXPORTADOR, SUM(PRECIO_TOTAL) AS COSTO FROM FACTURAS"
+				+"where FECHA >= '" + fechas.split(" ")[0] + "' "
+				+ "AND FECHA <= '" + fechas.split(" ")[1]
+				+" GROUP BY PRECIO_TOTAL, ID_EXPORTADOR)"
+				+" WHERE ID_EXPORTADOR=ID";
+				System.out.println(sql);
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = prepStmt.executeQuery();
+		while(rs.next()){
+			String nombre = rs.getString("NOMBRE");
+			double costo = Double.parseDouble(rs.getString("COSTO"));
+			eu.add(new ExportadorUnificado(nombre,costo));
+		}
+
+		return eu;
+	} 
 }

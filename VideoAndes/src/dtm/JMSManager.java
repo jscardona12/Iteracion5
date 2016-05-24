@@ -687,11 +687,11 @@ public class JMSManager
 	public ArrayList<vos.ExportadorUnificado> empezarRFC12(String fechas) throws JMSException{
 		MensajeExportadores respuesta1 = null, respuesta2 = null;
 		ArrayList<vos.ExportadorUnificado> unif = new ArrayList<>();
-		Mensaje msj = new Mensaje(3, "RFC12 " + fechas);
+		Mensaje msj = new Mensaje(1, "RFC12 " + fechas);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
 		System.out.println("va a publicar RFC12 - jdf");
 		topicPublisher.publish(msg);
-		System.out.println("publico RFC12 - AN ");
+		System.out.println("publico RFC12 - jdf ");
 		try {
 			inicializarContexto();
 
@@ -737,16 +737,16 @@ public class JMSManager
 				// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
 				// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
 				// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
-//				ListaExportadorUnificado lista = master.consultarCostos(
-//						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
+				ListaExportadorUnificado lista = videoMaster.consultarCostos(
+						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
 				// *************************************************************
 				
 				ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
 				
-//				for (vos.ExportadorUnificado a : lista.getExportadores()) {
-//					exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
-//				}
-				MensajeExportadores msj = new MensajeExportadores(3, "RFC12", exportadorUnificado);
+				for (vos.ExportadorUnificado a : lista.getExportadores()) {
+					exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
+				}
+				MensajeExportadores msj = new MensajeExportadores(1, "RFC12", exportadorUnificado);
 
 				System.out.println("Va a responer RFC12 - jdf");
 				try {
