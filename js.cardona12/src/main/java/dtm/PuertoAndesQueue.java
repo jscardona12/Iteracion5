@@ -585,7 +585,6 @@ public class PuertoAndesQueue
 		topicPublisher.publish(msg);
 		System.out.println("publico RFC11 - JS ");
 		try {
-			
 			inicializarContexto();
 			
 			// Inicia sesion utilizando la conexion
