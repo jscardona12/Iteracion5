@@ -29,8 +29,10 @@ import tm.VideoAndesMaster;
 import vos.Exportador;
 import vos.Importador;
 import vos.InfoExportador;
+import vos.ListaExportadorUnificado;
 import vos.ListaExportadores;
 import vos.ListaImportadores;
+import vos.ParametroBusqueda;
 import vos.RespuestaDescuento;
 
 /**
@@ -185,6 +187,21 @@ public class PersonaService {
   }
 
 	@PUT
+	@Path("/consultar_costos")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarCostos(ParametroBusqueda pb) {
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		ListaExportadorUnificado lista;
+		try {
+			lista = tm.rfc12(pb);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
+	}
+	
+	@PUT
 	@Path("/bono/{rut}")
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response consultarBono(@javax.ws.rs.PathParam("rut") String rut) {
@@ -198,5 +215,5 @@ public class PersonaService {
 		return Response.status(200).entity(descuento).build();
 	}
 	
-
+	
 }
