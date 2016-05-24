@@ -82,8 +82,8 @@ public class DAOTablaExportadores {
 		ArrayList<ExportadorUnificado> eu = new ArrayList<>();
 		String sql = "SELECT * FROM (SELECT ID AS ID1, NOMBRE FROM CLIENTES) INNER JOIN (SELECT ID AS ID2 FROM EXPORTADORES) ON ID2 = ID1 INNER JOIN"
 					+ " (SELECT ID_CLIENTE, SUM(COSTO) as COSTO FROM FACTURAS WHERE "
-					+ "FECHA_FACTURA >= '" + fechas.split(" ")[0] + "' "
-					+ "AND FECHA_FACTURA <= '" + fechas.split(" ")[1] + "' GROUP BY ID_CLIENTE)"
+					+ "FECHA >= '" + fechas.split(" ")[0] + "' "
+					+ "AND FECHA <= '" + fechas.split(" ")[1] + "' GROUP BY ID_CLIENTE)"
 					+ " ON ID1 = ID_CLIENTE";
 		System.out.println(sql);
 		PreparedStatement prepStmt = conn.prepareStatement(sql);
