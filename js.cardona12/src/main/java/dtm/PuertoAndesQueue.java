@@ -492,6 +492,7 @@ public class PuertoAndesQueue
 
 	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
+		int numClientes = 0;
 		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
 		System.out.println("va a publicar RF15P1 - JS " + rut);
@@ -499,6 +500,10 @@ public class PuertoAndesQueue
 		System.out.println("publico RF15P1 - JS " + rut);
 		try {
 			inicializarContexto();
+			if(master.buscarExportador(rut))
+			{
+				numClientes++;
+			}
 
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -510,7 +515,7 @@ public class PuertoAndesQueue
 
 			// Recibimos LOS mensaje
 
-			int numClientes = 0;
+			
 
 			System.out.println("Esperando 1 mensaje RF15 - JS...");
 			Message msn = consumer.receive();

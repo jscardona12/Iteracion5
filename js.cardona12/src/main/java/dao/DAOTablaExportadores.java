@@ -101,7 +101,7 @@ public class DAOTablaExportadores {
 			
 			if(rs1.next())
 			{
-				int costo = Integer.parseInt(rs.getString("COSTO"));
+				int costo = Integer.parseInt(rs1.getString("COSTO"));
 				barco.add(new Exportador(id, rut, costo));
 			}
 			
