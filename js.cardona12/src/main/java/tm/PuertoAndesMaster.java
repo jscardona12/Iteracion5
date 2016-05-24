@@ -1802,6 +1802,69 @@ public class PuertoAndesMaster {
 		}
 		
 	}
+	
+	public int inicarRF15(String rut) throws Exception {
+		return jms.empezarRF15(rut);
+	}
+	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception {
+		ArrayList<AreaUnificada> cu = new ArrayList<>();
 
+		cu.addAll(jms.empezarRFC11().getAreas());
+
+		ArrayList<ConsultaAreas> lsa = darMovimientosArea(-1);
+
+		for (ConsultaAreas ca : lsa) {
+			cu.add(new AreaUnificada(ca.getSEstado(), ca.getTipo()));
+		}
+
+		return new ListaAreaUnificada(cu);
+	}
+	
+	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception {
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+
+			String rango = "";
+			for (String s : pb.getWhere()) {
+				rango += s + " ";
+			}
+
+			ex.addAll(jms.empezarRFC12(rango));
+			for(Exportador a: daoExportadores.getExportadores())
+			{
+				ExportadorUnificado d = new ExportadorUnificado(a.toString(), a.getCosto());
+				ex.add(d);
+			}
+			
+
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
+	}
 }
 

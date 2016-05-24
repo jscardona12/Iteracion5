@@ -87,7 +87,7 @@ public class DAOTablaExportadores {
 
 		while (rs.next()) 
 		{
-			String name = rs.getString("NAME");
+			
 			int id = Integer.parseInt(rs.getString("ID"));
 			int rut = Integer.parseInt(rs.getString("RUT"));
 			int costoR = Integer.parseInt(rs.getString("ID_COSTO_FACTURADO"));
