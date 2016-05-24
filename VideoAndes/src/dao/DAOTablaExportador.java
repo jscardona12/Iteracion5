@@ -136,4 +136,19 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 		}
 		return exportadores;
 	}
+	public void aplicarDescuento(String rut, int descuento) throws SQLException {
+		String sql = "UPDATE EXPORTADORES SET ";
+		sql += "DESCUENTO=" + descuento;
+		sql += " WHERE RUT = '" + rut +"'";
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		prepStmt.executeQuery();
+	}
+	public boolean existeExportador(String rut) throws SQLException {
+		String sql = "SELECT * FROM EXPORTADORES WHERE RUT = '" + rut+"'";
+		System.out.println(sql);
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		return prepStmt.executeQuery().next();
+	}
 }

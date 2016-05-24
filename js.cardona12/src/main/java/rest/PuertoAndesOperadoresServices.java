@@ -34,7 +34,10 @@ import vos.Carga;
 import vos.ConsultaAreas;
 import vos.ConsultaBarcos;
 import vos.ConsultaMovimientos;
+import vos.ListaAreaUnificada;
+import vos.ListaExportadorUnificado;
 import vos.OperadorPortuario;
+import vos.ParametroBusqueda;
 import vos.Salida;
 import vos.respConsultaBarcos;
 
@@ -374,17 +377,60 @@ public class PuertoAndesOperadoresServices {
 		return Response.status(200).entity("se insertaron los datos").build();
 	}
 
-	@GET
-	@Path("rf14")
+	@PUT
+	@Path("rf14/{{id}}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response rf14()  throws JMSException {
+	public Response rf14(@PathParam("id")int id)  throws Exception {
 
 		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
-		tm.iniciarRF14();
+		tm.iniciarRF14(id);
 
 		return Response.status(200).entity("").build();
 	}
 
+	@PUT
+	@Path("/bono/{rut}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response consultarBono(@javax.ws.rs.PathParam("rut") String rut) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		int descuento;
+		try {
+			descuento = tm.inicarRF15(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(descuento).build();
+	}
+	
+	@PUT
+	@Path("/consultar_costos")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarCostos(ParametroBusqueda pb) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		ListaExportadorUnificado lista;
+		try {
+			lista = tm.rfc12(pb);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
+	}
+	
+	@POST
+	@Path("/consultar_distr")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarAreaDistr() {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		ListaAreaUnificada lca;
+		try {
+			lca = tm.rfc11();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lca).build();
+	}
 
 }
 

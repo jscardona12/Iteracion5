@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import vos.Barco;
+import vos.Carga;
 import vos.Muelle;
 
 /**
@@ -298,6 +299,105 @@ public class DAOBarco {
 
 
 		return verificar;
+	}
+	
+	public int getVolumenCarga(int area, Barco barco) throws SQLException
+	{
+		
+		int verificar =0;
+		String sql1 = "SELECT AREAS_DE_ALMACENAMIENTO.TIPO,AREAS_DE_ALMACENAMIENTO.ESTADO";
+		sql1 += " FROM AREAS_DE_ALMACENAMIENTO"
+				+ " WHERE AREAS_DE_ALMACENAMIENTO.ID ="+ area;
+
+		System.out.println("SQL stmt:" + sql1);
+		PreparedStatement prepStmt1 = conn.prepareStatement(sql1);
+		recursos.add(prepStmt1);
+		ResultSet rs1 = prepStmt1.executeQuery();
+		if(rs1.next())
+		{
+			String tipo = rs1.getString("TIPO");
+			int estado = Integer.parseInt(rs1.getString("ESTADO"));
+			if(estado == 0)
+			{
+				String sql2 = "SELECT " + tipo + "S.";
+				if(tipo.equalsIgnoreCase("SILO"))
+				{
+					sql2 += "CAPACIDAD FROM SILOS"
+							+ " WHERE SILOS.ID = " + area;
+				}
+				else
+				{
+					sql2 += "AREA FROM " + tipo
+							+ "S WHERE " + tipo +"S.ID = " + area;
+				}
+				System.out.println("SQL stmt:" + sql2);
+				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+				recursos.add(prepStmt2);
+				ResultSet rs2 = prepStmt2.executeQuery();
+				if(rs2.next())
+				{
+					String b = "";
+					if(tipo.equalsIgnoreCase("SILO"))
+						b = "CAPACIDAD";
+					else b = "AREA";
+
+					int capacidad = Integer.parseInt(rs2.getString(b));
+
+					String sql3 = "SELECT CARGAS.VOLUMEN, CARGAS.TIPO"
+							+ " FROM CARGAS"
+							+ " WHERE CARGAS.ID = " +barco.getCarga();
+
+					System.out.println("SQL stmt:" + sql3);
+					PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+					recursos.add(prepStmt3);
+					ResultSet rs3 = prepStmt3.executeQuery();
+					if(rs3.next())
+					{
+						System.out.println("A");
+						int volCarga = Integer.parseInt(rs3.getString("VOLUMEN"));
+						String tipoCarga = rs3.getString("TIPO");
+						System.out.println(capacidad+","+ volCarga);
+						System.out.println(tipo);
+
+						if((tipo.equalsIgnoreCase("BODEGA")
+								&& tipoCarga.equalsIgnoreCase("CONTENEDORES"))||
+								(tipo.equalsIgnoreCase("PATIO")
+										&& tipoCarga.equalsIgnoreCase("VEHICULOS"))||
+								(tipo.equalsIgnoreCase("COBERTIZO")
+										&& tipoCarga.equalsIgnoreCase("BIOTIPOS"))||
+								(tipo.equalsIgnoreCase("SILO")
+										&& tipoCarga.equalsIgnoreCase("GRANEL SOLIDO"))
+								&& (capacidad > volCarga)
+								)
+						{
+							System.out.println("B");
+							verificar = volCarga ;
+						}
+
+					}
+				}
+			}
+		}
+
+
+		return verificar;
+	}
+	
+	public String gettipoCarga(Barco b) throws SQLException
+	{
+		String sql3 = "SELECT CARGAS.TIPO"
+				+ " FROM CARGAS"
+				+ " WHERE CARGAS.ID = " +b.getCarga();
+
+		System.out.println("SQL stmt:" + sql3);
+		PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+		recursos.add(prepStmt3);
+		ResultSet rs3 = prepStmt3.executeQuery();
+		if(rs3.next())
+		{
+			return rs3.getString("TIPO");
+		}
+		return "";
 	}
 }
 	

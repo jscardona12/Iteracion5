@@ -19,7 +19,7 @@ public class MensajeAreas extends Mensaje {
 		return areas;
 	}
 
-	public void setAreas(ArrayList<AreaUnificada> areas) {
+	public void setAreas(ArrayList<AreaUnificada> cargas) {
 		this.areas = areas;
 	}
 }

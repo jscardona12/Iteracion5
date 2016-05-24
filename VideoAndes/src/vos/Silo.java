@@ -45,6 +45,10 @@ public class Silo extends Almacenamiento{
 		this.nombre = nombre;
 	}
 
+	public Silo(String estado, String tipo) {
+		super(0,tipo,estado);
+	}
+
 	/**
 	 * Método getter del atributo capacidad
 	 * @return capacidad del silo

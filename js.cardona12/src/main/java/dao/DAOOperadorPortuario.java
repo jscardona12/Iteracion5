@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import dtm.CargaUnificada;
 import vos.Barco;
 import vos.Carga;
 import vos.ConsultaAreas;
@@ -163,32 +164,32 @@ public class DAOOperadorPortuario {
 
 
 	}
-	
+
 	public void insertarDatosSalidas() throws SQLException
 	{
 		for(int i = 160; i<310; i++){
 			long d= i*1220227200;
 			Date fecha = new Date(d);
 			String date = fecha.toString();
-			
-		String sql4 = "INSERT INTO SALIDAS VALUES("
-				+ i+","+(i+10)+","+"TO_DATE('" + date
-				+ "', 'YYYY-MM-DD HH24:MI:SS')"+")";
 
-		System.out.println("SQL stmt:" + sql4);
+			String sql4 = "INSERT INTO SALIDAS VALUES("
+					+ i+","+(i+10)+","+"TO_DATE('" + date
+					+ "', 'YYYY-MM-DD HH24:MI:SS')"+")";
 
-		PreparedStatement prepStmt4= conn.prepareStatement(sql4);
-		recursos.add(prepStmt4);
-		ResultSet rs4 = prepStmt4.executeQuery();
-		String sql3 = "UPDATE BARCOS "
-				+ "SET BARCOS.ID_SALIDA ="+ i
-				+ " WHERE BARCOS.ID =" +(i+10);
+			System.out.println("SQL stmt:" + sql4);
 
-		System.out.println("SQL stmt:" + sql3);
+			PreparedStatement prepStmt4= conn.prepareStatement(sql4);
+			recursos.add(prepStmt4);
+			ResultSet rs4 = prepStmt4.executeQuery();
+			String sql3 = "UPDATE BARCOS "
+					+ "SET BARCOS.ID_SALIDA ="+ i
+					+ " WHERE BARCOS.ID =" +(i+10);
 
-		PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
-		recursos.add(prepStmt3);
-		ResultSet rs3 = prepStmt3.executeQuery();
+			System.out.println("SQL stmt:" + sql3);
+
+			PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+			recursos.add(prepStmt3);
+			ResultSet rs3 = prepStmt3.executeQuery();
 		}
 
 	}
@@ -201,25 +202,25 @@ public class DAOOperadorPortuario {
 			String date = fecha.toString();
 			int q = (int) (1 + (Math.random() * 4));
 
-			
-		String sql4 = "INSERT INTO RESERVAS VALUES("
-				+ "TO_DATE('" + date
-				+ "', 'YYYY-MM-DD HH24:MI:SS')"+","+(i)+","+(i+10)+","+q+")";
 
-		System.out.println("SQL stmt:" + sql4);
+			String sql4 = "INSERT INTO RESERVAS VALUES("
+					+ "TO_DATE('" + date
+					+ "', 'YYYY-MM-DD HH24:MI:SS')"+","+(i)+","+(i+10)+","+q+")";
 
-		PreparedStatement prepStmt4= conn.prepareStatement(sql4);
-		recursos.add(prepStmt4);
-		ResultSet rs4 = prepStmt4.executeQuery();
-		String sql3 = "UPDATE BARCOS "
-				+ "SET BARCOS.ID_RESERVA ="+ i
-				+ " WHERE BARCOS.ID =" +(i+10);
+			System.out.println("SQL stmt:" + sql4);
 
-		System.out.println("SQL stmt:" + sql3);
+			PreparedStatement prepStmt4= conn.prepareStatement(sql4);
+			recursos.add(prepStmt4);
+			ResultSet rs4 = prepStmt4.executeQuery();
+			String sql3 = "UPDATE BARCOS "
+					+ "SET BARCOS.ID_RESERVA ="+ i
+					+ " WHERE BARCOS.ID =" +(i+10);
 
-		PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
-		recursos.add(prepStmt3);
-		ResultSet rs3 = prepStmt3.executeQuery();
+			System.out.println("SQL stmt:" + sql3);
+
+			PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+			recursos.add(prepStmt3);
+			ResultSet rs3 = prepStmt3.executeQuery();
 		}
 
 	}
@@ -306,7 +307,7 @@ public class DAOOperadorPortuario {
 	{
 
 		for(int i = 914; i<1020; i++){
-			
+
 			int q = (int) (1 + (Math.random() * 4));
 			int volumen = i*1000;
 			int costo = i*100000;
@@ -981,12 +982,6 @@ public class DAOOperadorPortuario {
 		recursos.add(prepStmt2);
 		ResultSet rs2 = prepStmt2.executeQuery();
 
-
-
-
-
-
-
 	}
 
 	public void deshabilitarBarco(String td,Barco barco) throws SQLException
@@ -1417,17 +1412,13 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 
-
-
-
-
 			}
 
 		}
 		else{
-			String sql3 = "CARGAS.ID AS ID_CARGA, AREAS_DE_ALMACENAMIENTO.ID AS ID_AREA"
+			String sql3 = "SELECT CARGAS.ID AS ID_CARGA, AREAS_DE_ALMACENAMIENTO.ID AS ID_AREA, "
 					+"AREAS_DE_ALMACENAMIENTO.ESTADO,AREAS_DE_ALMACENAMIENTO.TIPO,AREAS_DE_ALMACENAMIENTO.COSTO, "
-					+"AREAS_DE_ALMACENAMIENTO.DESHABILITADO, CARGASXALMACENAMIENTO.FECHA"
+					+"AREAS_DE_ALMACENAMIENTO.DESHABILITADO, CARGASXALMACENAMIENTO.FECHA "
 					+"FROM CARGAS "
 					+" LEFT JOIN AREAS_DE_ALMACENAMIENTO "
 					+"ON AREAS_DE_ALMACENAMIENTO.ID = CARGAS.ID_AREA "
@@ -1475,7 +1466,7 @@ public class DAOOperadorPortuario {
 				else
 				{
 					sql2 += "AREA FROM " + tipoArea
-							+ "S WHERE " + tipoArea +"S.ID = " + tipoArea;
+							+ "S WHERE " + tipoArea +"S.ID = " + idArea;
 				}
 				System.out.println("SQL stmt:" + sql2);
 				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
@@ -1493,7 +1484,6 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 			}
-
 		}
 
 		return resp;
@@ -1538,7 +1528,7 @@ public class DAOOperadorPortuario {
 			int idCarga=-1;
 			if(rs3.getString("ID_CARGA")!=null)
 				idCarga= Integer.parseInt(rs3.getString("ID_CARGA"));
-			
+
 			String tipoArea="";
 			if(rs3.getString("TIPO")!= null)
 			{
@@ -1603,143 +1593,143 @@ public class DAOOperadorPortuario {
 		return resp;
 
 	}
-	
+
 	public ArrayList<respConsultaBarcos> getArribosBuques(ConsultaBarcos cons) throws SQLException
-    {
-        conn.setAutoCommit(false);
-        conn.setTransactionIsolation(conn.TRANSACTION_READ_COMMITTED);
-        ArrayList<respConsultaBarcos> resp = new ArrayList<respConsultaBarcos>();
+	{
+		conn.setAutoCommit(false);
+		conn.setTransactionIsolation(conn.TRANSACTION_READ_COMMITTED);
+		ArrayList<respConsultaBarcos> resp = new ArrayList<respConsultaBarcos>();
 
 
-        String sql3 = "SELECT BARCOS.ID AS ID_BARCO, BARCOS.NOMBRE AS NOMBRE_BARCO,BARCOS.TIPO AS TIPO_BARCO, "
-        		+"RESERVAS.FECHA_INICIAL, SALIDAS.HORA_SALIDA AS FECHA_SALIDA "
-        		+"FROM BARCOS "
-        		+"LEFT JOIN RESERVAS "
-        		+"ON RESERVAS.ID_BARCO = BARCOS.ID "
-        		+"LEFT JOIN SALIDAS "
-        		+"ON SALIDAS.ID_BARCO = BARCOS.ID "
-        		+"JOIN CARGAS "
-        		+"ON BARCOS.ID_CARGA = CARGAS.ID "
-        		+"WHERE BARCOS.NOMBRE =" + "'"+cons.nombreBarco+"' " 
-        		+"AND CARGAS.TIPO =" + "'"+cons.tipoCarga+"' " 
-        		+"AND BARCOS.TIPO = " + "'"+cons.tipoBarco+"' " 
-        		+"AND ((RESERVAS.FECHA_INICIAL >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
-        		+"AND RESERVAS.FECHA_INICIAL <= TO_DATE(" + "'"+cons.fechaFinal+"' "+",'DD-MM-YYYY')) "
-        		+"OR (SALIDAS.HORA_SALIDA >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
-        		+"AND SALIDAS.HORA_SALIDA <= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY'))) "
-        		+ "ORDER BY " + cons.orden ;
+		String sql3 = "SELECT BARCOS.ID AS ID_BARCO, BARCOS.NOMBRE AS NOMBRE_BARCO,BARCOS.TIPO AS TIPO_BARCO, "
+				+"RESERVAS.FECHA_INICIAL, SALIDAS.HORA_SALIDA AS FECHA_SALIDA "
+				+"FROM BARCOS "
+				+"LEFT JOIN RESERVAS "
+				+"ON RESERVAS.ID_BARCO = BARCOS.ID "
+				+"LEFT JOIN SALIDAS "
+				+"ON SALIDAS.ID_BARCO = BARCOS.ID "
+				+"JOIN CARGAS "
+				+"ON BARCOS.ID_CARGA = CARGAS.ID "
+				+"WHERE BARCOS.NOMBRE =" + "'"+cons.nombreBarco+"' " 
+				+"AND CARGAS.TIPO =" + "'"+cons.tipoCarga+"' " 
+				+"AND BARCOS.TIPO = " + "'"+cons.tipoBarco+"' " 
+				+"AND ((RESERVAS.FECHA_INICIAL >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
+				+"AND RESERVAS.FECHA_INICIAL <= TO_DATE(" + "'"+cons.fechaFinal+"' "+",'DD-MM-YYYY')) "
+				+"OR (SALIDAS.HORA_SALIDA >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
+				+"AND SALIDAS.HORA_SALIDA <= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY'))) "
+				+ "ORDER BY " + cons.orden ;
 
-        System.out.println("SQL stmt:" + sql3);
+		System.out.println("SQL stmt:" + sql3);
 
-        PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
-        recursos.add(prepStmt3);
-        ResultSet rs3 = prepStmt3.executeQuery();
-        while(rs3.next())
-        {
+		PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+		recursos.add(prepStmt3);
+		ResultSet rs3 = prepStmt3.executeQuery();
+		while(rs3.next())
+		{
 
-            int id = -1;
-            if(rs3.getString("ID_BARCO")!= null)
-            {
-            	id= Integer.parseInt(rs3.getString("ID_BARCO"));
-            }
-            String horaSalida="";
-            if(rs3.getString("FECHA_SALIDA")!= null)
-            {
-                horaSalida = rs3.getString("FECHA_SALIDA");
-            }
-            
-            String FE="";
-            if(rs3.getString("FECHA_INICIAL")!= null)
-            {
-                FE = rs3.getString("FECHA_INICIAL");
-            }
-            String nombre ="";
-            if(rs3.getString("NOMBRE_BARCO")!=null)
-                nombre = rs3.getString("NOMBRE_BARCO");
-            String tipoBarco="";
-            if(rs3.getString("TIPO_BARCO")!=null)
-                tipoBarco = rs3.getString("TIPO_BARCO");
+			int id = -1;
+			if(rs3.getString("ID_BARCO")!= null)
+			{
+				id= Integer.parseInt(rs3.getString("ID_BARCO"));
+			}
+			String horaSalida="";
+			if(rs3.getString("FECHA_SALIDA")!= null)
+			{
+				horaSalida = rs3.getString("FECHA_SALIDA");
+			}
 
-                
-            
-            respConsultaBarcos a = new respConsultaBarcos(horaSalida, FE, nombre, tipoBarco,id);
-            resp.add(a);
-        }
+			String FE="";
+			if(rs3.getString("FECHA_INICIAL")!= null)
+			{
+				FE = rs3.getString("FECHA_INICIAL");
+			}
+			String nombre ="";
+			if(rs3.getString("NOMBRE_BARCO")!=null)
+				nombre = rs3.getString("NOMBRE_BARCO");
+			String tipoBarco="";
+			if(rs3.getString("TIPO_BARCO")!=null)
+				tipoBarco = rs3.getString("TIPO_BARCO");
 
 
 
-        return resp;
+			respConsultaBarcos a = new respConsultaBarcos(horaSalida, FE, nombre, tipoBarco,id);
+			resp.add(a);
+		}
 
-    }
+
+
+		return resp;
+
+	}
 
 	public ArrayList<respConsultaBarcos> getArribosBuquesEnFecha(ConsultaBarcos cons) throws SQLException
-    {
-        conn.setAutoCommit(false);
-        conn.setTransactionIsolation(conn.TRANSACTION_READ_COMMITTED);
-        ArrayList<respConsultaBarcos> resp = new ArrayList<respConsultaBarcos>();
+	{
+		conn.setAutoCommit(false);
+		conn.setTransactionIsolation(conn.TRANSACTION_READ_COMMITTED);
+		ArrayList<respConsultaBarcos> resp = new ArrayList<respConsultaBarcos>();
 
 
-        String sql3 = "SELECT BARCOS.ID AS ID_BARCO, BARCOS.NOMBRE AS NOMBRE_BARCO,BARCOS.TIPO AS TIPO_BARCO, "
-        		+"RESERVAS.FECHA_INICIAL, SALIDAS.HORA_SALIDA AS FECHA_SALIDA "
-        		+"FROM BARCOS "
-        		+"LEFT JOIN RESERVAS "
-        		+"ON RESERVAS.ID_BARCO = BARCOS.ID "
-        		+"LEFT JOIN SALIDAS "
-        		+"ON SALIDAS.ID_BARCO = BARCOS.ID "
-        		+"JOIN CARGAS "
-        		+"ON BARCOS.ID_CARGA = CARGAS.ID "
-        		+"WHERE BARCOS.NOMBRE !=" + "'"+cons.nombreBarco+"' " 
-        		+"AND CARGAS.TIPO !=" + "'"+cons.tipoCarga+"' " 
-        		+"AND BARCOS.TIPO != " + "'"+cons.tipoBarco+"' " 
-        		+"AND ((RESERVAS.FECHA_INICIAL >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
-        		+"AND RESERVAS.FECHA_INICIAL <= TO_DATE(" + "'"+cons.fechaFinal+"' "+",'DD-MM-YYYY')) "
-        		+"OR (SALIDAS.HORA_SALIDA >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
-        		+"AND SALIDAS.HORA_SALIDA <= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY'))) "
-        		+ "ORDER BY " + cons.orden ;
+		String sql3 = "SELECT BARCOS.ID AS ID_BARCO, BARCOS.NOMBRE AS NOMBRE_BARCO,BARCOS.TIPO AS TIPO_BARCO, "
+				+"RESERVAS.FECHA_INICIAL, SALIDAS.HORA_SALIDA AS FECHA_SALIDA "
+				+"FROM BARCOS "
+				+"LEFT JOIN RESERVAS "
+				+"ON RESERVAS.ID_BARCO = BARCOS.ID "
+				+"LEFT JOIN SALIDAS "
+				+"ON SALIDAS.ID_BARCO = BARCOS.ID "
+				+"JOIN CARGAS "
+				+"ON BARCOS.ID_CARGA = CARGAS.ID "
+				+"WHERE BARCOS.NOMBRE !=" + "'"+cons.nombreBarco+"' " 
+				+"AND CARGAS.TIPO !=" + "'"+cons.tipoCarga+"' " 
+				+"AND BARCOS.TIPO != " + "'"+cons.tipoBarco+"' " 
+				+"AND ((RESERVAS.FECHA_INICIAL >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
+				+"AND RESERVAS.FECHA_INICIAL <= TO_DATE(" + "'"+cons.fechaFinal+"' "+",'DD-MM-YYYY')) "
+				+"OR (SALIDAS.HORA_SALIDA >= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY') "
+				+"AND SALIDAS.HORA_SALIDA <= TO_DATE(" + "'"+cons.fechaInicial+"' "+",'DD-MM-YYYY'))) "
+				+ "ORDER BY " + cons.orden ;
 
-        System.out.println("SQL stmt:" + sql3);
+		System.out.println("SQL stmt:" + sql3);
 
-        PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
-        recursos.add(prepStmt3);
-        ResultSet rs3 = prepStmt3.executeQuery();
-        while(rs3.next())
-        {
+		PreparedStatement prepStmt3 = conn.prepareStatement(sql3);
+		recursos.add(prepStmt3);
+		ResultSet rs3 = prepStmt3.executeQuery();
+		while(rs3.next())
+		{
 
-            int id = -1;
-            if(rs3.getString("ID_BARCO")!= null)
-            {
-            	id= Integer.parseInt(rs3.getString("ID_BARCO"));
-            }
-            String horaSalida="";
-            if(rs3.getString("FECHA_SALIDA")!= null)
-            {
-                horaSalida = rs3.getString("FECHA_SALIDA");
-            }
-            
-            String FE="";
-            if(rs3.getString("FECHA_INICIAL")!= null)
-            {
-                FE = rs3.getString("FECHA_INICIAL");
-            }
-            String nombre ="";
-            if(rs3.getString("NOMBRE_BARCO")!=null)
-                nombre = rs3.getString("NOMBRE_BARCO");
-            String tipoBarco="";
-            if(rs3.getString("TIPO_BARCO")!=null)
-                tipoBarco = rs3.getString("TIPO_BARCO");
+			int id = -1;
+			if(rs3.getString("ID_BARCO")!= null)
+			{
+				id= Integer.parseInt(rs3.getString("ID_BARCO"));
+			}
+			String horaSalida="";
+			if(rs3.getString("FECHA_SALIDA")!= null)
+			{
+				horaSalida = rs3.getString("FECHA_SALIDA");
+			}
 
-                
-            
-            respConsultaBarcos a = new respConsultaBarcos(horaSalida, FE, nombre, tipoBarco,id);
-            resp.add(a);
-        }
+			String FE="";
+			if(rs3.getString("FECHA_INICIAL")!= null)
+			{
+				FE = rs3.getString("FECHA_INICIAL");
+			}
+			String nombre ="";
+			if(rs3.getString("NOMBRE_BARCO")!=null)
+				nombre = rs3.getString("NOMBRE_BARCO");
+			String tipoBarco="";
+			if(rs3.getString("TIPO_BARCO")!=null)
+				tipoBarco = rs3.getString("TIPO_BARCO");
 
 
 
-        return resp;
+			respConsultaBarcos a = new respConsultaBarcos(horaSalida, FE, nombre, tipoBarco,id);
+			resp.add(a);
+		}
 
-    }
-	
+
+
+		return resp;
+
+	}
+
 
 	public ArrayList<ConsultaMovimientos> getMovCargas(int idAgente,String tipo,int costo) throws SQLException
 	{
@@ -1849,4 +1839,210 @@ public class DAOOperadorPortuario {
 		return resp;
 
 	}
+
+	public void almacenarCargas(ArrayList<CargaUnificada> cargas) throws SQLException
+	{
+		conn.setAutoCommit(false);
+		conn.setTransactionIsolation(conn.TRANSACTION_SERIALIZABLE);
+		CargaUnificada carga = null;
+		boolean cargo = false;
+
+
+		int i =0;
+
+		while(i <cargas.size()&& !cargo)
+		{
+			carga = cargas.get(i);
+
+
+			while(carga!=null && !cargo)
+			{
+
+
+				int a = 1;
+				while(a < 9)
+				{	
+
+					if(verificarAlmacenamientoRF14(a, carga))
+					{
+						cargarArea1(a, carga);
+						cargo = true;
+						a = 9;
+					}
+					else a++;
+				}
+
+			}
+
+			i++;
+		}
+	}
+
+	public boolean verificarAlmacenamientoRF14(int area, CargaUnificada barco) throws SQLException
+	{
+
+		boolean verificar = false;
+		String sql1 = "SELECT AREAS_DE_ALMACENAMIENTO.TIPO,AREAS_DE_ALMACENAMIENTO.ESTADO";
+		sql1 += " FROM AREAS_DE_ALMACENAMIENTO"
+				+ " WHERE AREAS_DE_ALMACENAMIENTO.ID ="+ area;
+
+		System.out.println("SQL stmt:" + sql1);
+		PreparedStatement prepStmt1 = conn.prepareStatement(sql1);
+		recursos.add(prepStmt1);
+		ResultSet rs1 = prepStmt1.executeQuery();
+		if(rs1.next())
+		{
+			String tipo = rs1.getString("TIPO");
+			int estado = Integer.parseInt(rs1.getString("ESTADO"));
+			if(estado == 0)
+			{
+				String sql2 = "SELECT " + tipo + "S.";
+				if(tipo.equalsIgnoreCase("SILO"))
+				{
+					sql2 += "CAPACIDAD FROM SILOS"
+							+ " WHERE SILOS.ID = " + area;
+				}
+				else
+				{
+					sql2 += "AREA FROM " + tipo
+							+ "S WHERE " + tipo +"S.ID = " + area;
+				}
+				System.out.println("SQL stmt:" + sql2);
+				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+				recursos.add(prepStmt2);
+				ResultSet rs2 = prepStmt2.executeQuery();
+				if(rs2.next())
+				{
+					String b = "";
+					if(tipo.equalsIgnoreCase("SILO"))
+						b = "CAPACIDAD";
+					else b = "AREA";
+
+					int capacidad = Integer.parseInt(rs2.getString(b));
+
+
+					if(barco != null)
+					{
+						System.out.println("A");
+						int volCarga = (int) barco.getVolumen();
+						String tipoCarga = barco.getTipo();
+						System.out.println(capacidad+","+ volCarga);
+						System.out.println(tipo);
+
+						if((tipo.equalsIgnoreCase("BODEGA")
+								&& (tipoCarga.equalsIgnoreCase("CONTENEDORES") || tipoCarga.equalsIgnoreCase("CONTENEDOR"))||
+								(tipo.equalsIgnoreCase("PATIO")
+										&& tipoCarga.equalsIgnoreCase("VEHICULOS"))||
+								(tipo.equalsIgnoreCase("COBERTIZO")
+										&& tipoCarga.equalsIgnoreCase("BIOTIPOS"))||
+								(tipo.equalsIgnoreCase("SILO")
+										&& tipoCarga.equalsIgnoreCase("GRANEL SOLIDO"))
+								&& (capacidad > volCarga)))
+
+						{
+							System.out.println("B");
+							verificar = true;
+						}
+
+					}
+				}
+			}
+		}
+
+
+		return verificar;
+	}
+
+	public void registrarTipoCargaArea(int area ,CargaUnificada carga) throws SQLException
+	{	
+
+		int idCarga = (int) carga.getValor();
+
+		String sql2 = "INSERT INTO CARGASXALMACENAMIENTO VALUES (";
+		sql2 +=  idCarga +  ",";
+		sql2 += area + ",";
+		sql2 += "TRUNC(SYSDATE)) ";
+
+		System.out.println("SQL stmt:" + sql2);
+
+		PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+		recursos.add(prepStmt2);
+		ResultSet rs2 = prepStmt2.executeQuery();
+	}
+
+	public void cargarArea1(int area, CargaUnificada barco)throws SQLException
+	{
+
+		registrarTipoCargaArea(area, barco);
+		String sql2 = "UPDATE AREAS_DE_ALMACENAMIENTO "
+				+ "SET AREAS_DE_ALMACENAMIENTO.ESTADO= 1"
+				+ " WHERE AREAS_DE_ALMACENAMIENTO.ID="+area;
+
+		System.out.println("SQL stmt:" + sql2);
+
+		PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+		recursos.add(prepStmt2);
+		ResultSet rs2 = prepStmt2.executeQuery();
+
+	}
+
+	public double getCapacidad(String tipo) throws SQLException
+	{
+		double count = 0;
+		if(tipo.equalsIgnoreCase("CONTENEDORES") || tipo.equalsIgnoreCase("CONTENEDOR"))
+		{
+			String sql2 = "SELECT COUNT(BODEGAS.AREAS) AS CUENTA "
+					+ "FROM BODEGAS ";
+			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+			recursos.add(prepStmt2);
+			ResultSet rs2 = prepStmt2.executeQuery();
+			if(rs2.next())
+			{
+				count = Double.parseDouble(rs2.getString("CUENTA"));
+			}
+			
+		}
+		
+		else if(tipo.equalsIgnoreCase("VEHICULOS"))
+		{
+			String sql2 = "SELECT COUNT(PATIOS.AREAS) AS CUENTA "
+					+ "FROM PATIOS";
+			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+			recursos.add(prepStmt2);
+			ResultSet rs2 = prepStmt2.executeQuery();
+			if(rs2.next())
+			{
+				count = Double.parseDouble(rs2.getString("CUENTA"));
+			}
+			
+		}
+		
+		else if(tipo.equalsIgnoreCase("BIOTIPOS"))
+		{
+			String sql2 = "SELECT COUNT(COBERTIZOS.AREAS) AS CUENTA "
+					+ "FROM COBERTIZOS";
+			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+			recursos.add(prepStmt2);
+			ResultSet rs2 = prepStmt2.executeQuery();
+			if(rs2.next())
+			{
+				count = Double.parseDouble(rs2.getString("CUENTA"));
+			}
+		}
+		
+		else if(tipo.equalsIgnoreCase("GRANEL SOLIDO"))
+		{
+			String sql2 = "SELECT COUNT(SILOS.CAPACIDAD) AS CUENTA "
+					+ "FROM SILOS";
+			PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
+			recursos.add(prepStmt2);
+			ResultSet rs2 = prepStmt2.executeQuery();
+			if(rs2.next())
+			{
+				count = Double.parseDouble(rs2.getString("CUENTA"));
+			}
+		}
+		return count;
+	}
+	
 }

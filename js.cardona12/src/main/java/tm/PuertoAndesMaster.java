@@ -7,12 +7,14 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.jms.JMSException;
 
 import vos.*;
 import dao.*;
+import dtm.CargaUnificada;
 import dtm.PuertoAndesQueue;
 
 /**
@@ -69,7 +71,7 @@ public class PuertoAndesMaster {
 	 */
 	public PuertoAndesMaster(String contextPathP) {
 		connectionDataPath = contextPathP + CONNECTION_DATA_FILE_NAME_REMOTE;
-		jms = new PuertoAndesQueue();
+		jms = new PuertoAndesQueue(this);
 		jms.inicializarContexto();
 		initConnectionData();
 	}
@@ -813,6 +815,39 @@ public class PuertoAndesMaster {
 		}
 	}
 	
+	public ArrayList<ConsultaAreas> darMovimientosArea(int idAgente) throws Exception {
+		DAOOperadorPortuario daoOperador = new DAOOperadorPortuario();
+		ArrayList<ConsultaAreas> resp = new ArrayList<ConsultaAreas>();
+		try 
+		{
+			//////Transacción
+			this.conn = darConexion();
+			daoOperador.setConn(conn);
+			resp =daoOperador.getAreas(idAgente);
+			conn.commit();
+			return resp;
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				daoOperador.cerrarRecursos();
+				if(this.conn!=null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
 	public ArrayList<ConsultaAreas> darAreas(int area1,int area2) throws Exception {
 		DAOOperadorPortuario daoOperador = new DAOOperadorPortuario();
 		ArrayList<ConsultaAreas> resp = new ArrayList<ConsultaAreas>();
@@ -1184,6 +1219,72 @@ public class PuertoAndesMaster {
 		return  barcos;
 	}
 
+	
+	public double darCapacidad(String tipo) throws Exception {
+		double barcos;
+		DAOOperadorPortuario daoOperadorPortuario = new DAOOperadorPortuario();
+		try 
+		{
+			//////Transacción
+			this.conn = darConexion();
+			daoOperadorPortuario.setConn(conn);
+			barcos = daoOperadorPortuario.getCapacidad(tipo);
+			
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				daoOperadorPortuario.cerrarRecursos();
+				if(this.conn!=null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return  barcos;
+	}
+	public void almacenarCargas(ArrayList<CargaUnificada> cargas) throws Exception {
+		double barcos;
+		DAOOperadorPortuario daoOperadorPortuario = new DAOOperadorPortuario();
+		try 
+		{
+			
+			//////Transacción
+			this.conn = darConexion();
+			daoOperadorPortuario.setConn(conn);
+			daoOperadorPortuario.almacenarCargas(cargas);
+			
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				daoOperadorPortuario.cerrarRecursos();
+				if(this.conn!=null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		
+	}
 	/**
 	 * Método que modela la transacción que busca el/los videos en la base de datos con el nombre entra como parámetro.
 	 * @param name - Nombre del video a buscar. name != null
@@ -1517,12 +1618,254 @@ public class PuertoAndesMaster {
 		}
 	}
 	
+	public void terminarRF14(ArrayList<Carga> cargaMia, int idB) {
+		try {
+			ArrayList cargas = new ArrayList<CargaUnificada>();
+			for(int i =0; i<cargaMia.size();i++)
+			{
+				Carga c = cargaMia.get(i);
+				CargaUnificada ca = new CargaUnificada(c.getPeso(),c.getVolumen(),c.getTipo(),c.getCosto());
+				
+				cargas.add(ca);
+			}
+			almacenarCargas(cargas);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-	public void iniciarRF14() throws JMSException {
+	public void iniciarRF14(int idB) throws Exception {
 		
-			jms.empezarRF14(null);
+		System.out.println("inicia bien");
+		ArrayList<Carga> cargas = new ArrayList<Carga>();
+		conn = darConexion();
+		conn.setAutoCommit(false);
+		java.sql.Savepoint save = conn.setSavepoint();
+		DAOBarco ba = new DAOBarco();
+		ba.setConn(conn);
+		try {
+			Barco b = ba.buscarBarcoPorID(idB);
+			if(b==null) throw new Exception("No existe el buque con id "+idB);
+			String tipo = ba.gettipoCarga(b);
+			int libreMio = (int) darCapacidad(tipo);
+			double volumen = ba.getVolumenCarga(1, b);
+			double diferencia = volumen - libreMio;
+			if(diferencia <0) throw new Exception("toda la carga se puede almacenar ");
+			else
+			{
+				double vol = volumen/6;
+				for(int i =0; i<6;i++)
+				{
+					Carga c = new Carga(tipo, volumen, (100000 + i), 10000, 1, 2000, -1, i);
+					cargas.add(c);
+				}
+			}
+				
+			
+
+			if(cargas.size()==0) throw new Exception("No hay carga para descargar");
+			
+			System.out.println(libreMio);
+			ArrayList<CargaUnificada> cargaU = new ArrayList<>();
+			ArrayList<Carga> cargaMia = new ArrayList<>();
+			for(Carga actual:cargas){
+				if(libreMio-actual.getVolumen()>0){
+					System.out.println("carga: "+actual.getId()+" vol: "+actual.getVolumen());
+					libreMio-=actual.getVolumen();
+					cargaMia.add(actual);
+				}else{
+					cargaU.add(new CargaUnificada(actual.getPeso(), actual.getVolumen(), tipo, actual.getCosto()));
+				}
+			}
+			System.out.println(cargaU.size()+" - "+cargas.size()+" - "+libreMio);
+			jms.empezarRF14(cargaU,cargaMia, idB);
+
+			conn = darConexion();
+			conn.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			conn.rollback(save);
+			System.out.println("Se hizo rollback al savepoint");
+			throw e;
+		} finally {
+			ba.cerrarRecursos();
+			conn.close();
+		}
+
 	
 	}
 	
+	public boolean buscarExportador(String rut) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			boolean resp =daoExportadores.buscarExportador(rut);
+			
+			daoExportadores.cerrarRecursos();
+			return resp;
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
+	public void actualizarExportador(String rut, int descuento) throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			daoExportadores.actualizarExportador(rut, descuento);
+			
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+	
+	public ArrayList<Exportador> getExportadores() throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+			ArrayList<Exportador> expos = new ArrayList<Exportador>();
+			daoExportadores.setConn(conn);
+			
+			expos = daoExportadores.getExportadores();
+			
+			daoExportadores.cerrarRecursos();
+			return expos;
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		
+	}
+	
+	public int inicarRF15(String rut) throws Exception {
+		return jms.empezarRF15(rut);
+	}
+	
+	public ListaAreaUnificada rfc11() throws Exception {
+		ArrayList<AreaUnificada> cu = new ArrayList<>();
+
+		cu.addAll(jms.empezarRFC11().getAreas());
+
+		ArrayList<ConsultaAreas> lsa = darMovimientosArea(-1);
+
+		for (ConsultaAreas ca : lsa) {
+			cu.add(new AreaUnificada(ca.getSEstado(), ca.getTipo()));
+		}
+
+		return new ListaAreaUnificada(cu);
+	}
+	
+	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception {
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+
+			String rango = "";
+			for (String s : pb.getWhere()) {
+				rango += s + " ";
+			}
+
+			ex.addAll(jms.empezarRFC12(rango));
+			for(Exportador a: daoExportadores.getExportadores())
+			{
+				ExportadorUnificado d = new ExportadorUnificado(a.toString(), a.getCosto());
+				ex.add(d);
+			}
+			
+
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
+	}
 }
 
