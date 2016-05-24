@@ -376,7 +376,7 @@ public class PuertoAndesOperadoresServices {
 		return Response.status(200).entity("se insertaron los datos").build();
 	}
 
-	@GET
+	@PUT
 	@Path("rf14/{{id}}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response rf14(@PathParam("id")int id)  throws Exception {

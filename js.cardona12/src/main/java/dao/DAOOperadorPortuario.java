@@ -1412,15 +1412,11 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 
-
-
-
-
 			}
 
 		}
 		else{
-			String sql3 = "SELECT CARGAS.ID AS ID_CARGA, AREAS_DE_ALMACENAMIENTO.ID AS ID_AREA "
+			String sql3 = "SELECT CARGAS.ID AS ID_CARGA, AREAS_DE_ALMACENAMIENTO.ID AS ID_AREA, "
 					+"AREAS_DE_ALMACENAMIENTO.ESTADO,AREAS_DE_ALMACENAMIENTO.TIPO,AREAS_DE_ALMACENAMIENTO.COSTO, "
 					+"AREAS_DE_ALMACENAMIENTO.DESHABILITADO, CARGASXALMACENAMIENTO.FECHA "
 					+"FROM CARGAS "
@@ -1470,7 +1466,7 @@ public class DAOOperadorPortuario {
 				else
 				{
 					sql2 += "AREA FROM " + tipoArea
-							+ "S WHERE " + tipoArea +"S.ID = " + tipoArea;
+							+ "S WHERE " + tipoArea +"S.ID = " + idArea;
 				}
 				System.out.println("SQL stmt:" + sql2);
 				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
@@ -1488,7 +1484,6 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 			}
-
 		}
 
 		return resp;
