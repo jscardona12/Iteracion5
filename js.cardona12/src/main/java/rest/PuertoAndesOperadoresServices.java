@@ -375,12 +375,12 @@ public class PuertoAndesOperadoresServices {
 	}
 
 	@GET
-	@Path("rf14")
+	@Path("rf14/{{id}}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response rf14()  throws JMSException {
+	public Response rf14(@PathParam("id")int id)  throws Exception {
 
 		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
-		tm.iniciarRF14();
+		tm.iniciarRF14(id);
 
 		return Response.status(200).entity("").build();
 	}
