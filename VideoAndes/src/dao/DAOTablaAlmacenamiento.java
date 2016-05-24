@@ -26,6 +26,7 @@ import vos.ListaAlmacenamientos;
 import vos.ListaMovimientoAlmacen;
 import vos.ListaMovimientoAlmacen;
 import vos.MovimientoAlmacen;
+import vos.ParametroBusqueda;
 import vos.Patio;
 import vos.Silo;
 
@@ -242,5 +243,86 @@ public class DAOTablaAlmacenamiento extends DAOTablaGenerica{
 		}
 
 		return new ListaMovimientoAlmacen(movimientos);
+	}
+
+
+
+	public ListaAlmacenamientos consultarAreas(ParametroBusqueda pb) throws SQLException {
+		List<Patio> listaP = new ArrayList<>();
+		List<Silo> listaS = new ArrayList<>();
+		List<Bodega> listaB = new ArrayList<>();
+		List<Cobertizo> listaC = new ArrayList<>();
+
+		String sql = "SELECT b.* "
+				+ "FROM ALMACEN a, BODEGAS b "
+				+ "WHERE a.ID = b.ID";
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = prepStmt.executeQuery();
+
+		while(rs.next()) {
+			int id = Integer.parseInt(rs.getString("ID")); 
+			int ancho = Integer.parseInt(rs.getString("ANCHO")); 
+			int largo = Integer.parseInt(rs.getString("LARGO")); 
+			int separacionColumnas = Integer.parseInt(rs.getString("SEPARACIONCOLUMNAS")); 
+			boolean tienePlataforma = Integer.parseInt(rs.getString("TIENEPLATAFORMA")) == 1;
+			Bodega b = new Bodega(id, largo, ancho, tienePlataforma, separacionColumnas);
+			listaB.add(b);
+		}
+
+		sql = "SELECT p.* "
+				+ "FROM ALMACEN a, PATIOS p "
+				+ "WHERE a.ID = p.ID";
+
+		prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		rs = prepStmt.executeQuery();
+
+		while(rs.next()) {
+			int id = Integer.parseInt(rs.getString("ID")); 
+			int ancho = Integer.parseInt(rs.getString("ANCHO")); 
+			int largo = Integer.parseInt(rs.getString("LARGO")); 
+
+			Patio p = new Patio(id, largo, ancho);
+			listaP.add(p);
+		}
+
+		sql = "SELECT c.* "
+				+ "FROM ALMACEN a, COBERTIZOS c "
+				+ "WHERE a.ID = c.ID";
+
+		prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		rs = prepStmt.executeQuery();
+
+		while(rs.next()) {
+			int id = Integer.parseInt(rs.getString("ID")); 
+			int ancho = Integer.parseInt(rs.getString("ANCHO")); 
+			int largo = Integer.parseInt(rs.getString("LARGO")); 
+
+			Cobertizo c = new Cobertizo(id, largo, ancho);
+			listaC.add(c);
+		}
+
+		sql = "SELECT s.* "
+				+ "FROM ALMACEN a, SILOS s "
+				+ "WHERE a.ID = s.ID";
+
+		prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		rs = prepStmt.executeQuery();
+
+		while(rs.next()) {
+			int id = Integer.parseInt(rs.getString("ID")); 
+			String nombre = rs.getString("NOMBRE"); 
+			int capacidad = Integer.parseInt(rs.getString("CAPACIDAD")); 
+
+			// Cambiar atributos
+			Silo s = new Silo(id, capacidad, nombre);
+			listaS.add(s);
+		}
+
+		return new ListaAlmacenamientos(listaS, listaC, listaB, listaP);
 	}
 }
