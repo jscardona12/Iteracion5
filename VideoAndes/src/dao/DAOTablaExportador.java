@@ -159,7 +159,7 @@ public class DAOTablaExportador extends DAOTablaGenerica{
 				+" (SELECT NOMBRE, ID FROM PERSONAS, FACTURAS"
 				+" WHERE ID_EXPORTADOR=ID),"
 				+"(SELECT ID_EXPORTADOR, SUM(PRECIO_TOTAL) AS COSTO FROM FACTURAS"
-				+"where FECHA_FACTURA >= '" + fechas.split(" ")[0] + "' "
+				+" where FECHA_FACTURA >= '" + fechas.split(" ")[0] + "' "
 				+ "AND FECHA_FACTURA <= '" + fechas.split(" ")[1]
 				+"' GROUP BY PRECIO_TOTAL, ID_EXPORTADOR)"
 				+" WHERE ID_EXPORTADOR=ID";
