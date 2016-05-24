@@ -41,6 +41,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.transaction.UserTransaction;
 
+import org.hornetq.jms.client.HornetQObjectMessage;
+
 import dao.DAOTablaAlmacenamiento;
 import dao.DAOTablaCargaEnAlmacen;
 import tm.VideoAndesMaster;
@@ -50,7 +52,9 @@ import vos.Carga;
 import vos.Cobertizo;
 import vos.ListaAlmacenamientos;
 import vos.ListaAreaUnificada;
+import vos.ListaExportadorUnificado;
 import vos.ListaMovimientoAlmacen;
+import vos.ParametroBusqueda;
 import vos.Patio;
 import vos.Silo;
 
@@ -335,12 +339,16 @@ public class JMSManager
 	
 	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
-		Mensaje msj = new Mensaje(2, "RF15P1 " + rut);
+		int numClientes = 0;
+		Mensaje msj = new Mensaje(3, "RF15P1 " + rut);
 		ObjectMessage msg = ts3.createObjectMessage(msj);
-		System.out.println("va a publicar RF15P1 - jdf " + rut);
+		System.out.println("va a publicar RF15P1 - AN " + rut);
 		topicPublisher.publish(msg);
-		System.out.println("publico RF15P1 - jdf " + rut);
+		System.out.println("publico RF15P1 - AN " + rut);
 		try {
+			if (videoMaster.encontrarExportador(rut))
+				numClientes++;
+
 			inicializarContexto();
 
 			// Inicia sesion utilizando la conexion
@@ -351,24 +359,27 @@ public class JMSManager
 			MessageConsumer consumer = session.createConsumer(miCola);
 			conm.start();
 
-			// Recibimos LOS mensaje
+			// Recibimos LOS mensajes
 
-			int numClientes = 0;
-
-			System.out.println("Esperando 1 mensaje RF15 - jdf...");
+			System.out.println("Esperando 1 mensaje RF15 - AN...");
 			Message msn = consumer.receive(5000);
 			TextMessage txt = (TextMessage) msn;
 			String respuesta1 = txt.getText();
 			if (respuesta1.contains("SI"))
 				numClientes++;
 
-			System.out.println("Esperando 2 mensaje RF15 - jdf...");
+			System.out.println("Esperando 2 mensaje RF15 - AN...");
 			Message msn2 = consumer.receive(5000);
 			TextMessage txt2 = (TextMessage) msn2;
 			String respuesta2 = txt2.getText();
 			if (respuesta2.contains("SI"))
 				numClientes++;
 
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("ERROR : " + e.getMessage());
+		} finally {
 			System.out.println("El exportador existe en " + numClientes + " bd - jdf");
 
 			switch (numClientes) {
@@ -381,17 +392,12 @@ public class JMSManager
 			}
 
 			// TIENES QUE ACTUALIZAR TU BASE DE DATOS.
-			
+
 			videoMaster.actualizarExportador(rut, descuento);
-
-			cerrarConexion();
-
-		} catch (Exception e) {
-			throw e;
 		}
-		Mensaje msjFinal = new Mensaje(2, "RF15P2 " + rut + " " + descuento);
+		Mensaje msjFinal = new Mensaje(3, "RF15P2 " + rut + " " + descuento);
 		ObjectMessage msgFinal = ts3.createObjectMessage(msjFinal);
-		System.out.println("va a publicar RF15P2 - jdf " + rut + " descuento: " + descuento);
+		System.out.println("va a publicar RF15P2 - jdf" + rut + " descuento: " + descuento);
 		topicPublisher.publish(msgFinal);
 		System.out.println("publico RF15P2 - jdf");
 		return descuento;
@@ -677,6 +683,95 @@ public class JMSManager
 			e.printStackTrace();
 		}
 	}
+	
+	public ArrayList<vos.ExportadorUnificado> empezarRFC12(String fechas) throws JMSException{
+		MensajeExportadores respuesta1 = null, respuesta2 = null;
+		ArrayList<vos.ExportadorUnificado> unif = new ArrayList<>();
+		Mensaje msj = new Mensaje(3, "RFC12 " + fechas);
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RFC12 - jdf");
+		topicPublisher.publish(msg);
+		System.out.println("publico RFC12 - AN ");
+		try {
+			inicializarContexto();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+			System.out.println("Esperando 1 mensaje RFC12 - AN...");
+			Message msn = consumer.receive(5000);
+			ObjectMessage txt = (ObjectMessage) msn;
+			respuesta1 = (MensajeExportadores) txt.getObject();
+
+			System.out.println("Esperando 2 mensaje RFC12 - AN...");
+			Message msn2 = consumer.receive(5000);
+			ObjectMessage txt2 = (ObjectMessage) msn2;
+			respuesta2 = (MensajeExportadores) txt2.getObject();
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("ERROR: " + e.getMessage());
+		} finally {
+			if (respuesta1 != null) {
+				for (ExportadorUnificado eu : respuesta1.getExportadores()) {
+					unif.add(new vos.ExportadorUnificado(eu.getNombre(), eu.getCosto()));
+				}
+			}
+			if (respuesta2 != null) {
+				for (ExportadorUnificado eu : respuesta2.getExportadores()) {
+					unif.add(new vos.ExportadorUnificado(eu.getNombre(), eu.getCosto()));
+				}
+			}
+		}
+		return unif;
+	}
+
+	public void responderRFC12(int i, String fechas) throws Exception{
+				// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+				// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
+				// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
+//				ListaExportadorUnificado lista = master.consultarCostos(
+//						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
+				// *************************************************************
+				
+				ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
+				
+//				for (vos.ExportadorUnificado a : lista.getExportadores()) {
+//					exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
+//				}
+				MensajeExportadores msj = new MensajeExportadores(3, "RFC12", exportadorUnificado);
+
+				System.out.println("Va a responer RFC12 - jdf");
+				try {
+					inicializarContexto();
+
+					// Inicia sesion utilizando la conexion
+					Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+					// Crea una sesion para producir mensajes hacia la cola que habiamos
+					// creado
+					MessageProducer producer = session.createProducer(getCola(i));
+
+					// Existen otros tipos de mensajes.
+					// En este caso utilizamos un mensaje simple de texto para enviar la
+					// informacion
+					ObjectMessage msg = session.createObjectMessage(msj);
+					producer.send(msg);
+					System.out.println("Se puso en la cola de RFC12 - jdf");
+
+					cerrarConexion();
+
+				} catch (Exception e) {
+					System.out.println("Error: " + e.getMessage());
+				}
+	}
 
 	public class Listener1 implements MessageListener
 	{
@@ -694,6 +789,8 @@ public class JMSManager
 					terminarRF15(texto.substring(7));
 				} else if (texto.contains("RFC11")) {
 					responderRFC11(1);
+				}else if (texto.contains("RFC12")) {
+					responderRFC12(3, texto.substring(6));
 				}
 			}catch(Exception e){
 				e.printStackTrace();
@@ -717,6 +814,8 @@ public class JMSManager
 					terminarRF15(texto.substring(7));
 				} else if (texto.contains("RFC11")) {
 					responderRFC11(3);
+				}else if (texto.contains("RFC12")) {
+					responderRFC12(3, texto.substring(6));
 				}
 			}catch(Exception e){
 				e.printStackTrace();
