@@ -52,6 +52,8 @@ public class ConsultaAreas
 	@JsonProperty(value="capacidad")
 	public int capacidad;
 	
+	public String sestado;
+	
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!--  end-user-doc  -->
@@ -73,7 +75,9 @@ public class ConsultaAreas
 
 	public ConsultaAreas(int i, int idCarga2, Date date, Date date2, String tipo2, String estado2, int costo2,
 			int deshabilitado2, int capacidad2) {
-		// TODO Auto-generated constructor stub
+		this.tipo = tipo2;
+		this.sestado = estado2;
+		
 	}
 
 	public String getFES() {
@@ -130,9 +134,7 @@ public class ConsultaAreas
 
 	public String getSEstado()
 	{
-		Integer a = estado;
-		String b = a.toString();
-		return b;
+		return sestado;
 	}
 	public void setEstado(int estado) {
 		this.estado = estado;

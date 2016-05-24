@@ -1812,7 +1812,7 @@ public class PuertoAndesMaster {
 
 		cu.addAll(jms.empezarRFC11().getAreas());
 
-		ArrayList<ConsultaAreas> lsa = darMovimientosArea(-1);
+		ArrayList<ConsultaAreas> lsa = darMovimientosArea();
 
 		for (ConsultaAreas ca : lsa) {
 			cu.add(new AreaUnificada(ca.getSEstado(), ca.getTipo()));
