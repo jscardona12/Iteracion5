@@ -1777,6 +1777,7 @@ public class PuertoAndesMaster {
 			expos = daoExportadores.getExportadores();
 			
 			daoExportadores.cerrarRecursos();
+			return expos;
 
 		} catch (SQLException e) {
 			System.err.println("SQLException:" + e.getMessage());
@@ -1799,6 +1800,7 @@ public class PuertoAndesMaster {
 				throw exception;
 			}
 		}
+		
 	}
 
 }
