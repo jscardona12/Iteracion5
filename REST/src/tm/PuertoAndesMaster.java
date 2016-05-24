@@ -1029,6 +1029,7 @@ public class PuertoAndesMaster {
 				}
 			}
 			if (!cargasHuerfanas.isEmpty()) {
+				System.out.println("No caben en en puerto - AN");
 				sePuede = jms.empezarRF14(estandarizarCargas(cargasHuerfanas));
 			}
 
@@ -1075,7 +1076,7 @@ public class PuertoAndesMaster {
 		return new ListaAreaUnificada(cu);
 	}
 
-	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception {
+	public ListaExportadorUnificado consultarCostos(String fechas) throws Exception {
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
 		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
 		try {
@@ -1083,12 +1084,7 @@ public class PuertoAndesMaster {
 
 			daoExportadores.setConn(conn);
 
-			String rango = "";
-			for (String s : pb.getWhere()) {
-				rango += s;
-			}
-
-			ex.addAll(daoExportadores.costoExportadores(rango));
+			ex.addAll(daoExportadores.costoExportadores(fechas));
 
 			daoExportadores.cerrarRecursos();
 
