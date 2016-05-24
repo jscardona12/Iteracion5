@@ -33,11 +33,13 @@ import vos.AreaUnificada;
 import vos.Buque;
 import vos.Carga;
 import vos.ConsultaAreas;
+import vos.ExportadorUnificado;
 import vos.Factura;
 import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
 import vos.ListaConsultaBuques;
 import vos.ListaExportadorCompleto;
+import vos.ListaExportadorUnificado;
 import vos.ListaMovimientoCargas;
 import vos.ListaRegistroBuques;
 import vos.MovimientoCarga;
@@ -952,16 +954,99 @@ public class PuertoAndesMaster {
 		return new ListaAreaUnificada(cu);
 	}
 	
+	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		ArrayList <ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+			
+			String rango = "";
+			for(String s : pb.getWhere()){
+				rango += s;
+			}
+						
+			ex.addAll(daoExportadores.costoExportadores(rango));
+						
+			daoExportadores.cerrarRecursos();
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
+	}
+	
+	public ListaExportadorUnificado rfc12(ParametroBusqueda pb) throws Exception{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		ArrayList <ExportadorUnificado> ex = new ArrayList<>();
+		try {
+			this.conn = darConexion();
+
+			daoExportadores.setConn(conn);
+			
+			String rango = "";
+			for(String s : pb.getWhere()){
+				rango += s + " ";
+			}
+			
+			ex.addAll(jms.empezarRFC12(rango));
+			
+			ex.addAll(daoExportadores.costoExportadores(rango));
+						
+			daoExportadores.cerrarRecursos();
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return new ListaExportadorUnificado(ex);
+	}
+	
 	public void actualizarExportador(String rut, int descuento) throws SQLException{
 		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
 		try {
 			this.conn = darConexion();
-			conn.setAutoCommit(false);
 
 			daoExportadores.setConn(conn);
 			
 			daoExportadores.actualizarExportador(rut, descuento);
-			
+						
 			daoExportadores.cerrarRecursos();
 
 		} catch (SQLException e) {

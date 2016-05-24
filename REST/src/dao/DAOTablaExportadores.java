@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import vos.Exportador;
 import vos.ExportadorCompleto;
+import vos.ExportadorUnificado;
 import vos.ListaExportadorCompleto;
 import vos.ListaRegistroBuques;
 import vos.ParametroBusqueda;
@@ -75,6 +76,26 @@ public class DAOTablaExportadores {
 		PreparedStatement prepStmt = conn.prepareStatement(sql);
 		recursos.add(prepStmt);
 		return prepStmt.executeQuery().next();
+	}
+	
+	public ArrayList<ExportadorUnificado> costoExportadores(String fechas) throws SQLException{
+		ArrayList<ExportadorUnificado> eu = new ArrayList<>();
+		String sql = "SELECT * FROM (SELECT ID AS ID1, NOMBRE FROM CLIENTES) INNER JOIN (SELECT ID AS ID2 FROM EXPORTADORES) ON ID2 = ID1 INNER JOIN"
+					+ " (SELECT ID_CLIENTE, SUM(COSTO) as COSTO FROM FACTURAS WHERE "
+					+ "FECHA >= '" + fechas.split(" ")[0] + "' "
+					+ "AND FECHA <= '" + fechas.split(" ")[1] + "' GROUP BY ID_CLIENTE)"
+					+ " ON ID1 = ID_CLIENTE";
+		System.out.println(sql);
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = prepStmt.executeQuery();
+		while(rs.next()){
+			String nombre = rs.getString("nombre");
+			double costo = Double.parseDouble(rs.getString("costo"));
+			eu.add(new ExportadorUnificado(nombre,costo));
+		}
+		
+		return eu;
 	}
 	
 	public ListaExportadorCompleto consultarExportador(int idExportador, ParametroBusqueda pb) throws SQLException{

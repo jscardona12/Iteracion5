@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 
 import tm.PuertoAndesMaster;
 import vos.ListaExportadorCompleto;
+import vos.ListaExportadorUnificado;
 import vos.ListaRegistroBuques;
 import vos.ParametroBusqueda;
 @Path("exportadores")
@@ -34,6 +35,21 @@ public class PuertoAndesExportadoresService {
 	
 	private String doErrorMessage(Exception e){
 		return "{ \"ERROR\": \""+ e.getMessage() + "\"}" ;
+	}
+	
+	@PUT
+	@Path("/consultar_costos")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarCostos(ParametroBusqueda pb) {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		ListaExportadorUnificado lista;
+		try {
+			lista = tm.rfc12(pb);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lista).build();
 	}
 	
 	@PUT

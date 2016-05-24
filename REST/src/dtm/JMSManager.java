@@ -44,6 +44,7 @@ import tm.PuertoAndesMaster;
 import vos.ConsultaAreas;
 import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
+import vos.ListaExportadorUnificado;
 import vos.ParametroBusqueda;
 
 /**
@@ -550,5 +551,94 @@ public class JMSManager {
 		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());
 		}
+	}
+
+	public ArrayList<vos.ExportadorUnificado> empezarRFC12(String fechas) throws JMSException{
+		MensajeExportadores respuesta1 = null, respuesta2 = null;
+		ArrayList<vos.ExportadorUnificado> unif = new ArrayList<>();
+		Mensaje msj = new Mensaje(3, "RFC12 " + fechas);
+		ObjectMessage msg = ts3.createObjectMessage(msj);
+		System.out.println("va a publicar RFC12 - AN");
+		topicPublisher.publish(msg);
+		System.out.println("publico RFC12 - AN ");
+		try {
+			inicializarContexto();
+
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			// Recibimos LOS mensaje
+
+			System.out.println("Esperando 1 mensaje RFC12 - AN...");
+			Message msn = consumer.receive(5000);
+			ObjectMessage txt = (ObjectMessage) msn;
+			respuesta1 = (MensajeExportadores) txt.getObject();
+
+			System.out.println("Esperando 2 mensaje RFC12 - AN...");
+			Message msn2 = consumer.receive(5000);
+			ObjectMessage txt2 = (ObjectMessage) msn2;
+			respuesta2 = (MensajeExportadores) txt2.getObject();
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("ERROR: " + e.getMessage());
+		} finally {
+			if (respuesta1 != null) {
+				for (ExportadorUnificado eu : respuesta1.getExportadores()) {
+					unif.add(new vos.ExportadorUnificado(eu.getNombre(), eu.getCosto()));
+				}
+			}
+			if (respuesta2 != null) {
+				for (ExportadorUnificado eu : respuesta2.getExportadores()) {
+					unif.add(new vos.ExportadorUnificado(eu.getNombre(), eu.getCosto()));
+				}
+			}
+		}
+		return unif;
+	}
+
+	public void responderRFC12(Queue cola, String fechas) throws Exception{
+				// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+				// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
+				// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
+				ListaExportadorUnificado lista = master.consultarCostos(
+						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
+				// *************************************************************
+				
+				ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
+				
+				for (vos.ExportadorUnificado a : lista.getExportadores()) {
+					exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
+				}
+				MensajeExportadores msj = new MensajeExportadores(3, "RFC12", exportadorUnificado);
+
+				System.out.println("Va a responer RFC12 - AN");
+				try {
+					inicializarContexto();
+
+					// Inicia sesion utilizando la conexion
+					Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+					// Crea una sesion para producir mensajes hacia la cola que habiamos
+					// creado
+					MessageProducer producer = session.createProducer(cola);
+
+					// Existen otros tipos de mensajes.
+					// En este caso utilizamos un mensaje simple de texto para enviar la
+					// informacion
+					ObjectMessage msg = session.createObjectMessage(msj);
+					producer.send(msg);
+					System.out.println("Se puso en la cola de RFC12 - AN");
+
+					cerrarConexion();
+
+				} catch (Exception e) {
+					System.out.println("Error: " + e.getMessage());
+				}
 	}
 }
