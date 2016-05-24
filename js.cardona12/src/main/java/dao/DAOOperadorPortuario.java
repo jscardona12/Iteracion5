@@ -1412,10 +1412,6 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 
-
-
-
-
 			}
 
 		}
@@ -1470,7 +1466,7 @@ public class DAOOperadorPortuario {
 				else
 				{
 					sql2 += "AREA FROM " + tipoArea
-							+ "S WHERE " + tipoArea +"S.ID = " + tipoArea;
+							+ "S WHERE " + tipoArea +"S.ID = " + idArea;
 				}
 				System.out.println("SQL stmt:" + sql2);
 				PreparedStatement prepStmt2 = conn.prepareStatement(sql2);
@@ -1488,7 +1484,6 @@ public class DAOOperadorPortuario {
 					resp.add(a);
 				}
 			}
-
 		}
 
 		return resp;
