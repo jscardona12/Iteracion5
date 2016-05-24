@@ -34,6 +34,7 @@ import vos.Carga;
 import vos.ConsultaAreas;
 import vos.ConsultaBarcos;
 import vos.ConsultaMovimientos;
+import vos.ListaAreaUnificada;
 import vos.ListaExportadorUnificado;
 import vos.OperadorPortuario;
 import vos.ParametroBusqueda;
@@ -414,6 +415,21 @@ public class PuertoAndesOperadoresServices {
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}
 		return Response.status(200).entity(lista).build();
+	}
+	
+	@POST
+	@Path("/consultar_distr")
+	@Produces({ MediaType.APPLICATION_JSON })
+	@Consumes({MediaType.APPLICATION_JSON})
+	public Response consultarAreaDistr() {
+		PuertoAndesMaster tm = new PuertoAndesMaster(getPath());
+		ListaAreaUnificada lca;
+		try {
+			lca = tm.rfc11();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(lca).build();
 	}
 
 }

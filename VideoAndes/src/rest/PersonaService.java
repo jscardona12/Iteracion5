@@ -31,6 +31,7 @@ import vos.Importador;
 import vos.InfoExportador;
 import vos.ListaExportadores;
 import vos.ListaImportadores;
+import vos.RespuestaDescuento;
 
 /**
  * Clase que expone servicios REST con ruta base: http://"ip o nombre de host":8080/VideoAndes/rest/videos/...
@@ -168,6 +169,20 @@ public class PersonaService {
 		}
 		return Response.status(200).entity(exportador).build();
 	}
+	
+	@GET
+  @Path("/descuento_exportador")
+	@Produces({ MediaType.APPLICATION_JSON })
+  public Response getExportador(@QueryParam("rut") String rut) {
+    VideoAndesMaster tm = new VideoAndesMaster(getPath());
+    RespuestaDescuento respuesta;
+    try {
+      respuesta = tm.darDescuentoExportador2PC(rut);
+    } catch (Exception e) {
+      return Response.status(500).entity(doErrorMessage(e)).build();
+    }
+    return Response.status(200).entity(respuesta).build();
+  }
 
 	@PUT
 	@Path("/bono/{rut}")

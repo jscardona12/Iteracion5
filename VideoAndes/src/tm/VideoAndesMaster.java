@@ -82,6 +82,7 @@ import vos.MovimientoCarga;
 import vos.Muelle;
 import vos.ParametroBusqueda;
 import vos.Patio;
+import vos.RespuestaDescuento;
 import vos.Salida;
 import vos.Silo;
 import vos.TipoCarga;
@@ -2383,6 +2384,22 @@ public class VideoAndesMaster {
 			daoAlmacen.cerrarRecursos();
 		}
 	}
+
+
+  public RespuestaDescuento darDescuentoExportador2PC(String rut) {
+    int desc = jms.twoPhaseCommitRF15(rut);
+    RespuestaDescuento res = new RespuestaDescuento();
+    if(desc != 0) {
+      res.setSuccess(true);
+      res.setMessage("Se realizó el descuento correctamente");
+      res.setDescuento(desc);
+    } else {
+      res.setSuccess(false);
+      res.setMessage("No se encuentra el exportador.");
+      res.setDescuento(desc);
+    }
+    return res;
+  }
 
 	public void descargarCargaPuertoAndes2(int idB, Date date, ArrayList<Carga> cargaMia) throws Exception{
 		

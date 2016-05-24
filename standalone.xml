@@ -162,31 +162,20 @@
 					    <password>pzvWms5XesatHU3U</password>
 					</security>
 				    <xa-pool>
-				      <prefill>false</prefill>
-				      <use-strict-min>false</use-strict-min>
-				      <flush-strategy>FailingConnectionOnly</flush-strategy>
 				      <is-same-rm-override>false</is-same-rm-override>
 				      <no-tx-separate-pools/>
-				      <pad-xid>false</pad-xid>
-				      <wrap-xa-resource>true</wrap-xa-resource>
 				    </xa-pool>
 				    <validation>
-				      <use-fast-fail>false</use-fast-fail>
-				      <exception-sorter class-name="org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter"/>
+				      <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter"/>
 				    </validation>
-				    <timeout/>
 				    <statement>
 				      <track-statements>false</track-statements>
 				    </statement>
-				    <recovery no-recovery="false">
-				      <recover-credential>
-				        <user-name>user</user-name>
-				        <password>password</password>
-				      </recover-credential>
+				    <recovery no-recovery="true">
 				    </recovery>
 				    <xa-datasource-class>
                     	oracle.jdbc.xa.client.OracleXADataSource
-                    	</xa-datasource-class>
+                    </xa-datasource-class>
 				  </xa-datasource>
 
 <!-- DATA SOURCE CARDONA - DE LOS RIOS -->
@@ -200,23 +189,17 @@
 					    <password>mYTCnMrpaqDtTyBa</password>
 					</security>
 				    <xa-pool>
-				      <prefill>false</prefill>
-				      <use-strict-min>false</use-strict-min>
-				      <flush-strategy>FailingConnectionOnly</flush-strategy>
 				      <is-same-rm-override>false</is-same-rm-override>
 				      <no-tx-separate-pools/>
-				      <pad-xid>false</pad-xid>
-				      <wrap-xa-resource>true</wrap-xa-resource>
 				    </xa-pool>
 				    <validation>
-				      <use-fast-fail>false</use-fast-fail>
-				      <exception-sorter class-name="org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter"/>
+				      <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter"/>
 				    </validation>
 				    <timeout/>
 				    <statement>
 				      <track-statements>false</track-statements>
 				    </statement>
-				    <recovery no-recovery="false">
+				    <recovery no-recovery="true">
 				      <recover-credential>
 				        <user-name>user</user-name>
 				        <password>password</password>
@@ -224,7 +207,7 @@
 				    </recovery>
 				    <xa-datasource-class>
                     	oracle.jdbc.xa.client.OracleXADataSource
-                    	</xa-datasource-class>
+                    </xa-datasource-class>
 				  </xa-datasource>
 
 <!-- DATA SOURCE ANTONIO DE LA V  -->
@@ -238,23 +221,17 @@
 					    <password>qPgfpEuzxWR2p9g9</password>
 					</security>
 				    <xa-pool>
-				      <prefill>false</prefill>
-				      <use-strict-min>false</use-strict-min>
-				      <flush-strategy>FailingConnectionOnly</flush-strategy>
 				      <is-same-rm-override>false</is-same-rm-override>
 				      <no-tx-separate-pools/>
-				      <pad-xid>false</pad-xid>
-				      <wrap-xa-resource>true</wrap-xa-resource>
 				    </xa-pool>
 				    <validation>
-				      <use-fast-fail>false</use-fast-fail>
-				      <exception-sorter class-name="org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter"/>
+				      <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter"/>
 				    </validation>
 				    <timeout/>
 				    <statement>
 				      <track-statements>false</track-statements>
 				    </statement>
-				    <recovery no-recovery="false">
+				    <recovery no-recovery="true">
 				      <recover-credential>
 				        <user-name>user</user-name>
 				        <password>password</password>
@@ -262,7 +239,7 @@
 				    </recovery>
 				    <xa-datasource-class>
                     	oracle.jdbc.xa.client.OracleXADataSource
-                    	</xa-datasource-class>
+                    </xa-datasource-class>
 				  </xa-datasource>
 
                 <drivers>
