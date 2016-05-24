@@ -477,12 +477,14 @@ public class JMSManager
 			}
 		}
 	}
-  public void twoPhaseCommitRF15(String rut) {
+  public int twoPhaseCommitRF15(String rut) {
     try {
-      UserTransaction utx = (UserTransaction) context.lookup("/UserTransaction");
+      UserTransaction utx = (UserTransaction) context.lookup("java:comp/UserTransaction");
       try {
         inicializarContexto();
+        System.out.println("aa");
         connectXA();
+        System.out.println("bb");
         utx.begin();
         
         System.out.println("Comienza 2PC-RF15");
@@ -490,13 +492,30 @@ public class JMSManager
           int numClientes = 0;
           
           for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
-            Statement st = conn.createStatement();
-            String sql = "SELECT * FROM EXPORTADORES WHERE RUT = " + rut;
-            System.out.println(sql + " - JS");
-            ResultSet rs = st.executeQuery(sql);
-            if (rs.next()) { numClientes++; };
-            st.close();
+            try {
+              System.out.println("a");
+              
+              
+              
+              Statement st = conn.createStatement();
+              String sql = "SELECT * FROM EXPORTADORES WHERE RUT = ";
+              sql += conn == conn2 ? "'" + rut + "'" : rut;
+              System.out.println(sql + " - JS");
+              ResultSet rs = st.executeQuery(sql);
+              System.out.println("b");
+              if (rs.next()) { numClientes++; };
+              System.out.println("c");
+              
+              st.close();
+              System.out.println("d");
+            } catch (Exception e) {
+              e.printStackTrace();
+              utx.setRollbackOnly();
+            }
+            //
           }
+          
+          System.out.println(2);
           
           int descuento = 0;
           
@@ -509,30 +528,47 @@ public class JMSManager
             break;
           }
           
+          System.out.println(3);
           for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
-            Statement st = conn.createStatement();
-            String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = " + rut;
-            System.out.println(sql);
-            int num = st.executeUpdate(sql);
+            try {
+              Statement st = conn.createStatement();
+              String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = ";
+              sql += conn == conn2 ? "'" + rut + "'" : rut;
+              System.out.println(sql);
+              int num = st.executeUpdate(sql);
+              st.close();
+              System.out.println(4);
+            } catch (Exception e) {
+              e.printStackTrace();
+              utx.setRollbackOnly();
+            }
           }
           
+          System.out.println(5);
           utx.commit();
+          closeXA();
+          System.out.println(6);
+          
+          return descuento;
         } catch (Exception e) {
           utx.setRollbackOnly();
         }
       } catch (Exception e) {
         e.printStackTrace();
+        
       }
       
     } catch (Exception e) {
       e.printStackTrace();
     }
+    return 0;
   }
 
   private void connectXA() throws SQLException {
     conn1 = ds1.getConnection();
     conn2 = ds2.getConnection();
-    conn2 = ds3.getConnection();
+    conn3 = ds3.getConnection();
+    
   }
   
   private void closeXA() throws SQLException {
