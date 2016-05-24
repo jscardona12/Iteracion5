@@ -63,7 +63,7 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			String tipo = rs.getString("TIPO");
 			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
-			int peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
@@ -166,7 +166,7 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 		ArrayList<Carga> cargas = new ArrayList<Carga>();
 
 		String sql = "SELECT * FROM CARGA c, CARGAENBUQUE cb "
-				+"WHERE c.ID=cb.ID_BUQUE AND c.ID="+id_b+ 
+				+"WHERE c.ID=cb.ID_CARGA AND cb.ID_BUQUE="+id_b+ 
 				"AND c.DESTINO='PUERTO_ANDES'"+
 				"AND cb.FECHA_RETIRADO IS NULL";
 
@@ -182,8 +182,9 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			String tipo = rs.getString("TIPO");
 			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
-			int peso = Integer.parseInt(rs.getString("PESO"));
-			double valor = Double.parseDouble(rs.getString("VALOR"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
+			String v="";
+			double valor = Double.parseDouble((v=rs.getString("VALOR"))!=null?v:"0.0");
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");
 			cargas.add(new Carga(id, origen, id_exportador, numero, destino, tipo, volumen, peso, rodada, contenedor, valor));
@@ -210,7 +211,7 @@ public class DAOTablaCargaEnBuque extends DAOTablaGenerica{
 			int numero = Integer.parseInt(rs.getString("NUMERO"));
 			String tipo = rs.getString("TIPO");
 			int volumen = Integer.parseInt(rs.getString("VOLUMEN"));
-			int peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double valor = Double.parseDouble(rs.getString("VALOR"));
 			boolean rodada = rs.getBoolean("RODADA");
 			boolean contenedor = rs.getBoolean("CONTENEDOR");

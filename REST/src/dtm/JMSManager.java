@@ -41,6 +41,7 @@ import javax.naming.NamingException;
 import javax.transaction.UserTransaction;
 
 import tm.PuertoAndesMaster;
+import vos.Carga;
 import vos.ConsultaAreas;
 import vos.ListaAreaUnificada;
 import vos.ListaConsultaAreas;
@@ -229,7 +230,7 @@ public class JMSManager {
 			String sql = "";
 			System.out.println(sql);
 			int num = st.executeUpdate(sql);
-			System.out.println("PuertoAndes 0206 - Se ingresaron " + num + " filas - conexion1");
+			System.out.println("PuertoAndes 3 - Se ingresaron " + num + " filas - conexion1");
 			st.close();
 
 			// Inicia sesion utilizando la conexion
@@ -246,7 +247,7 @@ public class JMSManager {
 			String peticion = "";
 			msg.setText(peticion);
 			producer.send(msg);
-			System.out.println("PuertoAndes 0206 - Se envi�: " + peticion);
+			System.out.println("PuertoAndes 3 - Se envi�: " + peticion);
 
 			// Si se envio de forma correcta el mensaje y se realizaron los
 			// cambios
@@ -274,11 +275,11 @@ public class JMSManager {
 			conm.start();
 
 			// Recibimos un mensaje
-			System.out.println("PuertoAndes0206 - Esperando mensaje...");
+			System.out.println("PuertoAndes3 - Esperando mensaje...");
 			Message msn = consumer.receive();
 			TextMessage txt = (TextMessage) msn;
 			String porInsertar = txt.getText();
-			System.out.println("PuertoAndes0206 - Recibido..." + porInsertar);
+			System.out.println("PuertoAndes3 - Recibido..." + porInsertar);
 
 			// Ejecutamos la transaccion en la base de datos
 			Statement st = conn1.createStatement();
@@ -286,7 +287,7 @@ public class JMSManager {
 			System.out.println(sql);
 
 			int num = st.executeUpdate(sql);
-			System.out.println("Se ingresaron " + num + " filas - PuertoAndes0206");
+			System.out.println("Se ingresaron " + num + " filas - PuertoAndes3");
 			// Si se envio de forma correcta el mensaje y se realizaron los
 			// cambios
 			// se hace commit
@@ -298,16 +299,130 @@ public class JMSManager {
 		}
 	}
 
-	public void empezarRF14(ArrayList<CargaUnificada> cargas) throws JMSException {
-		MensajeCargas msjCargas = new MensajeCargas(3, "RF14", cargas);
-		ObjectMessage msg = ts3.createObjectMessage(msjCargas);
-		System.out.println("va a publicar RF14 - AN");
-		topicPublisher.publish(msg);
-		System.out.println("publico RF14 - AN");
+	public void empezarRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB) throws Exception{
+		if(cargas.size()==0)throw new Exception("no hay cargas");
+		MensajeCargas mensaje = new MensajeCargas(2, "RF14-"+cargas.get(0).getTipo(), cargas);
+		ObjectMessage tm = ts2.createObjectMessage(mensaje);
+		topicPublisher.publish(tm);
+		System.out.println("bien");
+		recibirRF14(cargas, cargaMia, idB);
+
+	}
+	
+	public void recibirRF14(ArrayList<CargaUnificada> cargas, ArrayList<Carga> cargaMia, int idB){
+		try{
+			inicializarContexto();
+
+			//Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			//Crea una sesion para producir mensajes hacia la cola que habiamos creado
+			MessageConsumer consumer = session.createConsumer(miCola);
+			conm.start();
+
+			//Recibimos un mensaje
+			System.out.println("PuertoAndes3 - Esperando mensaje...");
+			Message msn = consumer.receive();
+			ObjectMessage txt = (ObjectMessage)msn;
+			Mensaje mensaje= (Mensaje)txt.getObject();
+			double capacidad1=0,capacidad3=0;
+			if(mensaje.getNumPuerto()==1){
+				capacidad1=Double.parseDouble(mensaje.getMensaje());
+			}else{
+				capacidad3=Double.parseDouble(mensaje.getMensaje());
+			}
+			msn = consumer.receive();
+			txt = (ObjectMessage)msn;
+			mensaje= (Mensaje)txt.getObject();
+			if(mensaje.getNumPuerto()==1){
+				capacidad1=Double.parseDouble(mensaje.getMensaje());
+			}else{
+				capacidad3=Double.parseDouble(mensaje.getMensaje());
+			}
+			
+			ArrayList<CargaUnificada> cargasPara1=new ArrayList<>();
+			ArrayList<CargaUnificada> cargasPara3=new ArrayList<>();
+			boolean sePuede=true;
+			for(CargaUnificada c:cargas){
+				double espacio = c.getVolumen();
+				if(capacidad1-espacio>=0){
+					capacidad1-=espacio;
+					cargasPara1.add(c);
+				}else if(capacidad3-espacio>=0){
+					capacidad3-=espacio;
+					cargasPara3.add(c);
+				}else{
+					sePuede=false;
+				}
+			}
+			if(!sePuede){
+				MessageProducer producer = session.createProducer(cola1);
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(3, "CANCEL", null) );
+				producer.send(message);
+				producer = session.createProducer(cola2);
+				message = session.createObjectMessage( new MensajeCargas(3, "CANCEL", null) );
+				producer.send(message);
+			}else{
+				MessageProducer producer = session.createProducer(cola1);
+				ObjectMessage message = session.createObjectMessage( new MensajeCargas(3, "OK", cargasPara1) );
+				producer.send(message);
+				producer = session.createProducer(cola2);
+				message = session.createObjectMessage( new MensajeCargas(3, "OK", cargasPara3) );
+				producer.send(message);
+//				videoMaster.terminarRF14(cargaMia, idB); TRANS PROPIA: TERMINAR DE BAJAR LA CARGA DEL BUQUE
+			}
+			
+			cerrarConexion();
+
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
-	public void responderRF14(Queue cola) {
-		System.out.println("Va a responer rf14 - AN");
+	public void responderRF14(Queue cola, String tipo){
+		System.out.println("Va a responer rf14");
+		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
+		int libre=1000; //CAMBIAR
+		try {
+//			libre = videoMaster.getAlmacenamientoLibre(tipo);
+
+			//fin transaccion propia
+			try{
+				inicializarContexto();
+
+				//Inicia sesion utilizando la conexion
+				Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+				//Crea una sesion para producir mensajes hacia la cola destino
+				MessageProducer producer = session.createProducer(cola);
+				ObjectMessage message = session.createObjectMessage( new Mensaje(3, libre+"") );
+				producer.send(message);
+				System.out.println("PuertoAndes 3 - Se envi�: "+libre);
+
+				//Crea una sesion para recibir mensajes
+				MessageConsumer consumer = session.createConsumer(miCola);
+				conm.start();
+
+				//Recibimos un mensaje
+				System.out.println("PuertoAndes3 - Esperando mensaje...");
+				Message msn = consumer.receive();
+				ObjectMessage txt = (ObjectMessage)msn;
+				MensajeCargas porInsertar = (MensajeCargas)txt.getObject();
+				System.out.println("PuertoAndes3 - Recibido..."+porInsertar.getMensaje());
+
+				//TRANSACCION PROPIA: insertar cargas en bd
+				if(!porInsertar.getMensaje().equals("CANCEL")){
+//					videoMaster.insertarCargas(porInsertar.getCargas());
+				}
+
+				cerrarConexion();
+
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 	}
 
 	public class Listener1 implements MessageListener {
@@ -317,7 +432,7 @@ public class JMSManager {
 				Mensaje msj = (Mensaje) obj.getObject();
 				String texto = msj.getMensaje();
 				if(texto.startsWith("RF14")){
-//					responderRF14(cola1,texto.split("-")[1]);
+					responderRF14(cola1,texto.split("-")[1]);
 				} else if (texto.contains("RF15P1")) {
 					responderRF15(cola1, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {
@@ -338,7 +453,7 @@ public class JMSManager {
 				Mensaje msj = (Mensaje) obj.getObject();
 				String texto = msj.getMensaje();
 				if(texto.startsWith("RF14")){
-//					responderRF14(cola1, texto.split("-")[1]);
+					responderRF14(cola2, texto.split("-")[1]);
 				}else if (texto.contains("RF15P1")) {
 					responderRF15(cola2, texto.substring(7));
 				} else if (texto.contains("RF15P2")) {

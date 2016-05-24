@@ -69,6 +69,7 @@ import dtm.JMSManager;
 import exception.BuqueDeshabilitadoException;
 import vos.Video;
 import vos.Almacenamiento;
+import vos.AreaUnificada;
 import vos.Arribo;
 import vos.Bodega;
 import vos.Buque;
@@ -81,6 +82,7 @@ import vos.Factura;
 import vos.Importador;
 import vos.InfoExportador;
 import vos.ListaAlmacenamientos;
+import vos.ListaAreaUnificada;
 import vos.ListaArribos;
 import vos.ListaArribosYSalidas;
 import vos.ListaBuques;
@@ -94,6 +96,7 @@ import vos.ListaTipoCarga;
 import vos.ListaVideos;
 import vos.MovimientoCarga;
 import vos.Muelle;
+import vos.ParametroBusqueda;
 import vos.Patio;
 import vos.Salida;
 import vos.Silo;
@@ -2195,13 +2198,46 @@ public class VideoAndesMaster {
 
 
 
-	public void iniciarRF14(List<Integer> idCargas) throws Exception{
-		ArrayList<CargaUnificada> cargas = new ArrayList<>();
-		for(Integer id:idCargas){
-			Carga actual = getCarga(id);
-			cargas.add(new CargaUnificada(actual.getPeso(), actual.getVolumen(), actual.getTipoCarga(), actual.getValor()));
+	public void iniciarRF14(int idB) throws Exception{
+		System.out.println("inicia bien");
+		ArrayList<Carga> cargas;
+		conn = darConexion();
+		conn.setAutoCommit(false);
+		Savepoint save = conn.setSavepoint();
+		try {
+			Buque b = getBuque(idB, conn);
+			if(b==null) throw new Exception("No existe el buque con id "+idB);
+
+			cargas = darCargasDestinoPuertoAndes(b, conn);
+
+			if(cargas.size()==0) throw new Exception("No hay carga para descargar");
+			int libreMio = getAlmacenamientoLibre(cargas.get(0).getTipoCarga());
+			System.out.println(libreMio);
+			ArrayList<CargaUnificada> cargaU = new ArrayList<>();
+			ArrayList<Carga> cargaMia = new ArrayList<>();
+			for(Carga actual:cargas){
+				if(libreMio-actual.getVolumen()>0){
+					System.out.println("carga: "+actual.getID()+" vol: "+actual.getVolumen());
+					libreMio-=actual.getVolumen();
+					cargaMia.add(actual);
+				}else{
+					cargaU.add(new CargaUnificada(actual.getPeso(), actual.getVolumen(), actual.getTipoCarga(), actual.getValor()));
+				}
+			}
+			System.out.println(cargaU.size()+" - "+cargas.size()+" - "+libreMio);
+			jms.empezarRF14(cargaU,cargaMia, idB);
+
+			conn = darConexion();
+			conn.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			conn.rollback(save);
+			System.out.println("Se hizo rollback al savepoint");
+			throw e;
+		} finally {
+			conn.close();
 		}
-		jms.empezarRF14(cargas);
+
 	}
 
 
@@ -2230,7 +2266,7 @@ public class VideoAndesMaster {
 		DAOTablaCargaEnAlmacen daoCargaAlmacen = new DAOTablaCargaEnAlmacen();
 		try {
 			daoCargaAlmacen.setConn(conn);
-
+			System.out.println(resp.getBodegas().size());
 			for(Bodega b : resp.getBodegas()) {
 				double sumaCapacidad = b.getAncho() * b.getLargo();
 				List<Carga> cargas = daoCargaAlmacen.darCargasEnAlmacen(b.getID());
@@ -2321,6 +2357,33 @@ public class VideoAndesMaster {
 		}
 	}
 
+	public void descargarCargaPuertoAndes2(int idB, Date date, ArrayList<Carga> cargaMia) throws Exception{
+		
+		conn = darConexion();
+		conn.setAutoCommit(false);
+		Savepoint save = conn.setSavepoint();
+
+		try {
+			Buque b = getBuque(idB, conn);
+
+			if(b==null) throw new Exception("No existe el buque con id "+idB);
+
+
+			if(cargaMia.size()==0) throw new Exception("No hay carga para descargar");
+			Almacenamiento a = buscarAlmacenamientoAdecuado(cargaMia.get(0), conn);
+			descargarBuque(a, b, date, cargaMia, conn);
+
+			conn.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			conn.rollback(save);
+			System.out.println("Se hizo rollback al savepoint");
+			throw e;
+		} finally {
+			conn.close();
+		}
+
+	}
 
 
 
@@ -2346,6 +2409,121 @@ public class VideoAndesMaster {
 			try {
 				daoExportador.cerrarRecursos();
 				if(this.conn!=null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+
+
+
+
+	public void terminarRF14(ArrayList<Carga> cargaMia, int idB) {
+		try {
+			descargarCargaPuertoAndes2(idB, new Date(), cargaMia);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+
+	public boolean encontrarExportador(String rut) throws SQLException {
+		DAOTablaExportador daoExportadores = new DAOTablaExportador();
+		boolean existe = false;
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+
+			daoExportadores.setConn(conn);
+			
+			existe = daoExportadores.existeExportador(rut);
+			
+			daoExportadores.cerrarRecursos();
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+		return existe;
+	}
+
+
+
+
+	public int consultarBono(String rut) throws Exception{
+		return jms.empezarRF15(rut);
+	}
+
+
+
+
+	public ListaAreaUnificada rfc11(int idUsuario, ParametroBusqueda pb) throws Exception{
+		ArrayList<AreaUnificada> cu = new ArrayList<>();
+
+		cu.addAll(jms.empezarRFC11().getAreas());
+		
+		ListaAlmacenamientos lsa = consultarAreas(idUsuario, pb);
+
+		for(Bodega ca : lsa.getBodegas()){
+			cu.add(new AreaUnificada(ca.getEstado(), "Bodega"));
+		}
+		for(Cobertizo ca : lsa.getCobertizos()){
+			cu.add(new AreaUnificada(ca.getEstado(), "Cobertizo"));
+		}for(Silo ca : lsa.getSilos()){
+			cu.add(new AreaUnificada(ca.getEstado(), "Silo"));
+		}for(Patio ca : lsa.getPatios()){
+			cu.add(new AreaUnificada(ca.getEstado(), "Patio"));
+		}
+		return new ListaAreaUnificada(cu);
+	}
+
+
+
+
+	public ListaAlmacenamientos consultarAreas(int idUsuario, ParametroBusqueda pb) throws Exception {
+		if(!esRol(idUsuario, Usuario.ADMIN))throw new Exception("No se tienen los privilegios para realizar esta acci�n.");
+		DAOTablaAlmacenamiento daoCargas = new DAOTablaAlmacenamiento();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(true);
+				
+			daoCargas.setConn(conn);
+			return daoCargas.consultarAreas(pb);
+			
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				daoCargas.cerrarRecursos();
+				if (this.conn != null)
 					this.conn.close();
 			} catch (SQLException exception) {
 				System.err.println("SQLException closing resources:" + exception.getMessage());

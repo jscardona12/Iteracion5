@@ -1553,7 +1553,7 @@ public class PuertoAndesMaster {
 
 	public void iniciarRF14() throws JMSException {
 		
-			jms.empezarRF14(null);
+//			jms.empezarRF14(null);
 	
 	}
 	

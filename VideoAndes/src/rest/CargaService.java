@@ -127,16 +127,17 @@ public class CargaService {
 	 * @param exportador - video a agregar
 	 * @return Json con el video que agrego o Json con el error que se produjo
 	 */
-	@GET
+	@PUT
 	@Path("rf14")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response darMovimientosCargaExportadorConValorMayorA(List<Integer> idCargas) {
-
+	public Response rf14(@QueryParam("buque") int idB) {
 		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+
 		try {
-			tm.iniciarRF14(idCargas);
+			tm.iniciarRF14(idB);
 		} catch (Exception e) {
+			System.out.println("ERROR");
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}
 		return Response.status(200).entity("").build();

@@ -169,5 +169,19 @@ public class PersonaService {
 		return Response.status(200).entity(exportador).build();
 	}
 
+	@PUT
+	@Path("/bono/{rut}")
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response consultarBono(@javax.ws.rs.PathParam("rut") String rut) {
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		int descuento;
+		try {
+			descuento = tm.consultarBono(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(descuento).build();
+	}
+	
 
 }
