@@ -69,28 +69,28 @@ public class JMSManager
 	 * Datasource fuente de datos
 	 */
 	private DataSource ds1;
-	
+
 	/**
-   * Datasource fuente de datos 2
-   */
-  private DataSource ds2;
-  
-  /**
-   * Datasource fuente de datos 3
-   */
-  private DataSource ds3;
+	 * Datasource fuente de datos 2
+	 */
+	private DataSource ds2;
+
+	/**
+	 * Datasource fuente de datos 3
+	 */
+	private DataSource ds3;
 	/**
 	 * Conexion para la base de datos 
 	 */
 	private Connection conn1;
 	/**
-   * Conexion para la base de datos 
-   */
-  private Connection conn2;
-  /**
-   * Conexion para la base de datos 
-   */
-  private Connection conn3;
+	 * Conexion para la base de datos 
+	 */
+	private Connection conn2;
+	/**
+	 * Conexion para la base de datos 
+	 */
+	private Connection conn3;
 	/**
 	 * Contexto inicial
 	 */
@@ -336,7 +336,7 @@ public class JMSManager
 		recibirRF14(cargas, cargaMia, idB);
 
 	}
-	
+
 	public int empezarRF15(String rut) throws Exception {
 		int descuento = 0;
 		int numClientes = 0;
@@ -436,7 +436,7 @@ public class JMSManager
 				capacidad3=Double.parseDouble(mensaje.getMensaje());
 			}
 			System.out.println("recibe segunda capacidad "+capacidad1+" - "+capacidad3);
-			
+
 			ArrayList<CargaUnificada> cargasPara1=new ArrayList<>();
 			ArrayList<CargaUnificada> cargasPara3=new ArrayList<>();
 			boolean sePuede=true;
@@ -481,7 +481,7 @@ public class JMSManager
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void responderRF14(int i, String tipo){
 		System.out.println("Va a responer rf14");
 		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
@@ -643,7 +643,7 @@ public class JMSManager
 		List<Silo> silos = lista.getSilos();
 		List<Cobertizo> cobertizos = lista.getCobertizos();
 		List<Patio> patios = lista.getPatios();
-		
+
 		ArrayList<AreaUnificada> areasUnificadas = new ArrayList<>();
 		for (Bodega a : bodegas) {
 			areasUnificadas.add(new AreaUnificada(a.getEstado(), "Bodega"));
@@ -662,7 +662,7 @@ public class JMSManager
 		System.out.println("Va a responer RFC11 - jdf");
 		try {
 			inicializarContexto();
-			
+
 			// Inicia sesion utilizando la conexion
 			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -683,7 +683,7 @@ public class JMSManager
 			e.printStackTrace();
 		}
 	}
-	
+
 	public ArrayList<vos.ExportadorUnificado> empezarRFC12(String fechas) throws JMSException{
 		MensajeExportadores respuesta1 = null, respuesta2 = null;
 		ArrayList<vos.ExportadorUnificado> unif = new ArrayList<>();
@@ -733,44 +733,43 @@ public class JMSManager
 		return unif;
 	}
 
-	public void responderRFC12(int i, String fechas) throws Exception{
-				// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
-				// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
-				// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
-				ListaExportadorUnificado lista = videoMaster.consultarCostos(
-						new ParametroBusqueda(new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>()));
-				// *************************************************************
-				
-				ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
-				
-				for (vos.ExportadorUnificado a : lista.getExportadores()) {
-					exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
-				}
-				MensajeExportadores msj = new MensajeExportadores(1, "RFC12", exportadorUnificado);
+	public void responderRFC12(int cola, String fechas) throws Exception{
+		// SIMPLEMENTE HACEN EL LLAMADO AL METODO NORMAL QUE YA TIENEN
+		// IMPLEMENTADO DE RFC3 Y CONVIERTEN LOS
+		// EXPORTADORES A LOS EXPORTADORES ESTANDAR.
+		ListaExportadorUnificado lista = videoMaster.consultarCostos(fechas);
+		// *************************************************************
 
-				System.out.println("Va a responer RFC12 - jdf");
-				try {
-					inicializarContexto();
+		ArrayList<ExportadorUnificado> exportadorUnificado = new ArrayList<>();
 
-					// Inicia sesion utilizando la conexion
-					Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		for (vos.ExportadorUnificado a : lista.getExportadores()) {
+			exportadorUnificado.add(new ExportadorUnificado(a.getNombre(), a.getCosto()));
+		}
+		MensajeExportadores msj = new MensajeExportadores(3, "RFC12", exportadorUnificado);
 
-					// Crea una sesion para producir mensajes hacia la cola que habiamos
-					// creado
-					MessageProducer producer = session.createProducer(getCola(i));
+		System.out.println("Va a responer RFC12 - AN");
+		try {
+			inicializarContexto();
 
-					// Existen otros tipos de mensajes.
-					// En este caso utilizamos un mensaje simple de texto para enviar la
-					// informacion
-					ObjectMessage msg = session.createObjectMessage(msj);
-					producer.send(msg);
-					System.out.println("Se puso en la cola de RFC12 - jdf");
+			// Inicia sesion utilizando la conexion
+			Session session = conm.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-					cerrarConexion();
+			// Crea una sesion para producir mensajes hacia la cola que habiamos
+			// creado
+			MessageProducer producer = session.createProducer(getCola(cola));
 
-				} catch (Exception e) {
-					System.out.println("Error: " + e.getMessage());
-				}
+			// Existen otros tipos de mensajes.
+			// En este caso utilizamos un mensaje simple de texto para enviar la
+			// informacion
+			ObjectMessage msg = session.createObjectMessage(msj);
+			producer.send(msg);
+			System.out.println("Se puso en la cola de RFC12 - AN");
+
+			cerrarConexion();
+
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		}
 	}
 
 	public class Listener1 implements MessageListener
@@ -830,104 +829,104 @@ public class JMSManager
 		System.out.println("mal");
 		return null;
 	}
-	
-  public int twoPhaseCommitRF15(String rut) {
-    try {
-      UserTransaction utx = (UserTransaction) context.lookup("java:comp/UserTransaction");
-      try {
-        inicializarContexto();
-        System.out.println("aa");
-        connectXA();
-        System.out.println("bb");
-        utx.begin();
-        
-        System.out.println("Comienza 2PC-RF15");
-        try {
-          int numClientes = 0;
-          
-          for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
-            try {
-              System.out.println("a");
-              
-              
-              
-              Statement st = conn.createStatement();
-              String sql = "SELECT * FROM EXPORTADORES WHERE RUT = ";
-              sql += conn == conn2 ? "'" + rut + "'" : rut;
-              System.out.println(sql + " - JS");
-              ResultSet rs = st.executeQuery(sql);
-              System.out.println("b");
-              if (rs.next()) { numClientes++; };
-              System.out.println("c");
-              
-              st.close();
-              System.out.println("d");
-            } catch (Exception e) {
-              e.printStackTrace();
-              utx.setRollbackOnly();
-            }
-            //
-          }
-          
-          System.out.println(2);
-          
-          int descuento = 0;
-          
-          switch (numClientes) {
-          case 2:
-            descuento = 3;
-            break;
-          case 3:
-            descuento = 5;
-            break;
-          }
-          
-          System.out.println(3);
-          for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
-            try {
-              Statement st = conn.createStatement();
-              String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = ";
-              sql += conn == conn2 ? "'" + rut + "'" : rut;
-              System.out.println(sql);
-              int num = st.executeUpdate(sql);
-              st.close();
-              System.out.println(4);
-            } catch (Exception e) {
-              e.printStackTrace();
-              utx.setRollbackOnly();
-            }
-          }
-          
-          System.out.println(5);
-          utx.commit();
-          closeXA();
-          System.out.println(6);
-          
-          return descuento;
-        } catch (Exception e) {
-          utx.setRollbackOnly();
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-        
-      }
-      
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return 0;
-  }
 
-  private void connectXA() throws SQLException {
-    conn1 = ds1.getConnection();
-    conn2 = ds2.getConnection();
-    conn3 = ds3.getConnection();
-    
-  }
-  
-  private void closeXA() throws SQLException {
-    conn1.close();
-    conn2.close();
-    conn3.close();
-  }
+	public int twoPhaseCommitRF15(String rut) {
+		try {
+			UserTransaction utx = (UserTransaction) context.lookup("java:comp/UserTransaction");
+			try {
+				inicializarContexto();
+				System.out.println("aa");
+				connectXA();
+				System.out.println("bb");
+				utx.begin();
+
+				System.out.println("Comienza 2PC-RF15");
+				try {
+					int numClientes = 0;
+
+					for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
+						try {
+							System.out.println("a");
+
+
+
+							Statement st = conn.createStatement();
+							String sql = "SELECT * FROM EXPORTADORES WHERE RUT = ";
+							sql += conn == conn2 ? "'" + rut + "'" : rut;
+							System.out.println(sql + " - JS");
+							ResultSet rs = st.executeQuery(sql);
+							System.out.println("b");
+							if (rs.next()) { numClientes++; };
+							System.out.println("c");
+
+							st.close();
+							System.out.println("d");
+						} catch (Exception e) {
+							e.printStackTrace();
+							utx.setRollbackOnly();
+						}
+						//
+					}
+
+					System.out.println(2);
+
+					int descuento = 0;
+
+					switch (numClientes) {
+					case 2:
+						descuento = 3;
+						break;
+					case 3:
+						descuento = 5;
+						break;
+					}
+
+					System.out.println(3);
+					for(Connection conn : new Connection[]{conn1, conn2, conn3}) {
+						try {
+							Statement st = conn.createStatement();
+							String sql = "UPDATE EXPORTADORES SET DESCUENTO = " + descuento + " WHERE RUT = ";
+							sql += conn == conn2 ? "'" + rut + "'" : rut;
+							System.out.println(sql);
+							int num = st.executeUpdate(sql);
+							st.close();
+							System.out.println(4);
+						} catch (Exception e) {
+							e.printStackTrace();
+							utx.setRollbackOnly();
+						}
+					}
+
+					System.out.println(5);
+					utx.commit();
+					closeXA();
+					System.out.println(6);
+
+					return descuento;
+				} catch (Exception e) {
+					utx.setRollbackOnly();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	private void connectXA() throws SQLException {
+		conn1 = ds1.getConnection();
+		conn2 = ds2.getConnection();
+		conn3 = ds3.getConnection();
+
+	}
+
+	private void closeXA() throws SQLException {
+		conn1.close();
+		conn2.close();
+		conn3.close();
+	}
 }

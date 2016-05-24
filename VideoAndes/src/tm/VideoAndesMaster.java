@@ -2580,7 +2580,7 @@ public class VideoAndesMaster {
 
 
 
-	public ListaExportadorUnificado consultarCostos(ParametroBusqueda pb) throws Exception {
+	public ListaExportadorUnificado consultarCostos(String fechas) throws Exception {
 		DAOTablaExportador daoExportadores = new DAOTablaExportador();
 		ArrayList<ExportadorUnificado> ex = new ArrayList<>();
 		try {
@@ -2588,12 +2588,7 @@ public class VideoAndesMaster {
 
 			daoExportadores.setConn(conn);
 
-			String rango = "";
-			for (String s : pb.getWhere()) {
-				rango += s;
-			}
-
-			ex.addAll(daoExportadores.costoExportadores(rango));
+			ex.addAll(daoExportadores.costoExportadores(fechas));
 
 			daoExportadores.cerrarRecursos();
 

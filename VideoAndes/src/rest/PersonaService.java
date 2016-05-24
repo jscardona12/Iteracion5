@@ -139,7 +139,7 @@ public class PersonaService {
 			@QueryParam("orden") String orden) {
 		VideoAndesMaster tm = new VideoAndesMaster(getPath());
 		InfoExportador exportador;
-		
+
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			Date inicioD = (inicio == null) ? null : sdf.parse(inicio);
@@ -171,20 +171,20 @@ public class PersonaService {
 		}
 		return Response.status(200).entity(exportador).build();
 	}
-	
+
 	@GET
-  @Path("/descuento_exportador")
+	@Path("/descuento_exportador")
 	@Produces({ MediaType.APPLICATION_JSON })
-  public Response getExportador(@QueryParam("rut") String rut) {
-    VideoAndesMaster tm = new VideoAndesMaster(getPath());
-    RespuestaDescuento respuesta;
-    try {
-      respuesta = tm.darDescuentoExportador2PC(rut);
-    } catch (Exception e) {
-      return Response.status(500).entity(doErrorMessage(e)).build();
-    }
-    return Response.status(200).entity(respuesta).build();
-  }
+	public Response getExportador(@QueryParam("rut") String rut) {
+		VideoAndesMaster tm = new VideoAndesMaster(getPath());
+		RespuestaDescuento respuesta;
+		try {
+			respuesta = tm.darDescuentoExportador2PC(rut);
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+		return Response.status(200).entity(respuesta).build();
+	}
 
 	@PUT
 	@Path("/consultar_costos")
@@ -200,7 +200,7 @@ public class PersonaService {
 		}
 		return Response.status(200).entity(lista).build();
 	}
-	
+
 	@PUT
 	@Path("/bono/{rut}")
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -214,6 +214,6 @@ public class PersonaService {
 		}
 		return Response.status(200).entity(descuento).build();
 	}
-	
-	
+
+
 }
