@@ -128,7 +128,7 @@ public class DAOTablaCargas {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			double peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			String tempId = rs.getString("ID_BUQUE");
 			int idBuque1 = (tempId == null) ? -1 : Integer.parseInt(tempId);
@@ -158,7 +158,7 @@ public class DAOTablaCargas {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			double peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			String tempId = rs.getString("ID_BUQUE");
 			int idBuque1 = (tempId == null) ? -1 : Integer.parseInt(tempId);
@@ -188,7 +188,7 @@ public class DAOTablaCargas {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			double peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			String tempId = rs.getString("ID_BUQUE");
 			int idBuque1 = (tempId == null) ? -1 : Integer.parseInt(tempId);
@@ -235,7 +235,7 @@ public class DAOTablaCargas {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			double peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			String tempId = rs.getString("ID_BUQUE");
 			int idBuque = (tempId == null) ? -1 : Integer.parseInt(tempId);
@@ -287,7 +287,7 @@ public class DAOTablaCargas {
 		while (rs.next()) {
 			int id1 = Integer.parseInt(rs.getString("ID"));
 			String tipo = rs.getString("TIPO");
-			double peso = Integer.parseInt(rs.getString("PESO"));
+			double peso = Double.parseDouble(rs.getString("PESO"));
 			double volumen = Double.parseDouble(rs.getString("VOLUMEN"));
 			String tempId = rs.getString("ID_BUQUE");
 			int idBuque = (tempId == null) ? -1 : Integer.parseInt(tempId);

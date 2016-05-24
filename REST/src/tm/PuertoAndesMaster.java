@@ -48,6 +48,7 @@ import vos.RegistroAlmacenamiento;
 import vos.RegistroBuque;
 import vos.RegistroCarga;
 import vos.RegistroTerminal;
+import vos.RespuestaDescuento;
 import vos.Usuario;
 
 public class PuertoAndesMaster {
@@ -1003,8 +1004,9 @@ public class PuertoAndesMaster {
 
 			daoBuques.setConn(conn);
 			Buque buque = daoBuques.buscarBuquePorId(rb.getId_buque());
-
+			System.out.println("buque: " + buque + " - AN");
 			daoCargas.setConn(conn);
+			System.out.println(daoCargas + " - AN");
 			ArrayList<Carga> listaCarga = (ArrayList<Carga>) daoCargas.cargasDelBuque(buque.getId());
 
 			// Forza el destino para puerto andes para poder descargar el buque.
@@ -1478,5 +1480,20 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
+	
+	  public RespuestaDescuento darDescuentoExportador2PC(String rut) {
+		    int desc = jms.twoPhaseCommitRF15(rut);
+		    RespuestaDescuento res = new RespuestaDescuento();
+		    if(desc != 0) {
+		      res.setSuccess(true);
+		      res.setMessage("Se realizó el descuento correctamente");
+		      res.setDescuento(desc);
+		    } else {
+		      res.setSuccess(false);
+		      res.setMessage("No se encuentra el exportador.");
+		      res.setDescuento(desc);
+		    }
+		    return res;
+		  }
 
 }
