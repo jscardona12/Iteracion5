@@ -358,7 +358,7 @@ public class PuertoAndesQueue
 				producer = session.createProducer(cola3);
 				message = session.createObjectMessage( new MensajeCargas(1, "OK", cargasPara3) );
 				producer.send(message);
-//				videoMaster.terminarRF14(cargaMia, idB); LLAMAR REQ PARA TERMINAR DE CARGAR EN PUERTO
+				master.terminarRF14(cargaMia, idB); //LLAMAR REQ PARA TERMINAR DE CARGAR EN PUERTO
 			}
 			
 			cerrarConexion();
@@ -370,10 +370,10 @@ public class PuertoAndesQueue
 
 	public void responderRF14(Queue cola, String tipo){
 		System.out.println("Va a responer rf14");
-		//TRANSACCION PROPIA: Conseguir espacio libre para segun el tipo
-		int libre=2000000; //CAMBIAR
+		
+		int libre=0;
 		try {
-//			libre = videoMaster.getAlmacenamientoLibre(tipo);
+			libre = (int) master.darCapacidad(tipo);
 
 			//fin transaccion propia
 			try{
@@ -401,7 +401,7 @@ public class PuertoAndesQueue
 
 				//TRANSACCION PROPIA: insertar cargas en bd
 				if(!porInsertar.getMensaje().equals("CANCEL")){
-//					videoMaster.insertarCargas(porInsertar.getCargas());
+					master.almacenarCargas(porInsertar.getCargas());
 				}
 
 				cerrarConexion();
