@@ -1765,5 +1765,41 @@ public class PuertoAndesMaster {
 			}
 		}
 	}
+	
+	public ArrayList<Exportador> getExportadores() throws SQLException{
+		DAOTablaExportadores daoExportadores = new DAOTablaExportadores();
+		try {
+			this.conn = darConexion();
+			conn.setAutoCommit(false);
+			ArrayList<Exportador> expos = new ArrayList<Exportador>();
+			daoExportadores.setConn(conn);
+			
+			expos = daoExportadores.getExportadores();
+			
+			daoExportadores.cerrarRecursos();
+
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			conn.rollback();
+			throw e;
+		} finally {
+			try {
+				daoExportadores.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw exception;
+			}
+		}
+	}
+
 }
 

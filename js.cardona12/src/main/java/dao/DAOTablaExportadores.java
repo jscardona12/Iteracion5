@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import vos.Barco;
+import vos.Exportador;
+
 
 public class DAOTablaExportadores {
 
@@ -71,6 +74,39 @@ public class DAOTablaExportadores {
 		
 		return rs3.next();
 		
+	}
+	
+	public ArrayList<Exportador> getExportadores() throws SQLException
+	{
+		ArrayList barco = new ArrayList<Exportador>();
+		String sql = "SELECT * FROM EXPORTADORES";
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		ResultSet rs = prepStmt.executeQuery();
+
+		while (rs.next()) 
+		{
+			String name = rs.getString("NAME");
+			int id = Integer.parseInt(rs.getString("ID"));
+			int rut = Integer.parseInt(rs.getString("RUT"));
+			int costoR = Integer.parseInt(rs.getString("ID_COSTO_FACTURADO"));
+			
+			String sql1 = "SELECT COSTO FROM COSTOS_FACTURADOS "
+					+ "WHERE COSTOS_FACTURADOS.ID = " + costoR;
+
+			PreparedStatement prepStmt1 = conn.prepareStatement(sql1);
+			recursos.add(prepStmt1);
+			ResultSet rs1 = prepStmt1.executeQuery();
+			
+			if(rs1.next())
+			{
+				int costo = Integer.parseInt(rs.getString("COSTO"));
+				barco.add(new Exportador(id, rut, costo));
+			}
+			
+		}
+		return barco;
 	}
 	
 }
