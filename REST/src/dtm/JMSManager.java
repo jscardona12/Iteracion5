@@ -439,6 +439,8 @@ public class JMSManager {
 					terminarRF15(texto.substring(7));
 				} else if (texto.contains("RFC11")) {
 					responderRFC11(cola1);
+				} else if (texto.contains("RFC12")) {
+					responderRFC12(cola1, texto.substring(7));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -460,6 +462,8 @@ public class JMSManager {
 					terminarRF15(texto.substring(7));
 				} else if (texto.contains("RFC11")) {
 					responderRFC11(cola2);
+				} else if (texto.contains("RFC12")) {
+					responderRFC12(cola2, texto.substring(7));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
